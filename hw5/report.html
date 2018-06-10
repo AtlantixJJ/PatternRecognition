@@ -1,0 +1,1008 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  .markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+  }
+  
+  @media (max-width: 767px) {
+    .markdown-body {
+      padding: 15px;
+    }
+  }
+  
+  @font-face {
+    font-family: octicons-link;
+    src: url(data:font/woff;charset=utf-8;base64,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)
+      format("woff");
+  }
+  
+  .markdown-body {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    line-height: 1.5;
+    color: #24292e;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+      sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 16px;
+    line-height: 1.5;
+    word-wrap: break-word;
+  }
+  
+  .markdown-body .pl-c {
+    color: #6a737d;
+  }
+  
+  .markdown-body .pl-c1,
+  .markdown-body .pl-s .pl-v {
+    color: #005cc5;
+  }
+  
+  .markdown-body .pl-e,
+  .markdown-body .pl-en {
+    color: #6f42c1;
+  }
+  
+  .markdown-body .pl-smi,
+  .markdown-body .pl-s .pl-s1 {
+    color: #24292e;
+  }
+  
+  .markdown-body .pl-ent {
+    color: #22863a;
+  }
+  
+  .markdown-body .pl-k {
+    color: #d73a49;
+  }
+  
+  .markdown-body .pl-s,
+  .markdown-body .pl-pds,
+  .markdown-body .pl-s .pl-pse .pl-s1,
+  .markdown-body .pl-sr,
+  .markdown-body .pl-sr .pl-cce,
+  .markdown-body .pl-sr .pl-sre,
+  .markdown-body .pl-sr .pl-sra {
+    color: #032f62;
+  }
+  
+  .markdown-body .pl-v,
+  .markdown-body .pl-smw {
+    color: #e36209;
+  }
+  
+  .markdown-body .pl-bu {
+    color: #b31d28;
+  }
+  
+  .markdown-body .pl-ii {
+    color: #fafbfc;
+    background-color: #b31d28;
+  }
+  
+  .markdown-body .pl-c2 {
+    color: #fafbfc;
+    background-color: #d73a49;
+  }
+  
+  .markdown-body .pl-c2::before {
+    content: "^M";
+  }
+  
+  .markdown-body .pl-sr .pl-cce {
+    font-weight: bold;
+    color: #22863a;
+  }
+  
+  .markdown-body .pl-ml {
+    color: #735c0f;
+  }
+  
+  .markdown-body .pl-mh,
+  .markdown-body .pl-mh .pl-en,
+  .markdown-body .pl-ms {
+    font-weight: bold;
+    color: #005cc5;
+  }
+  
+  .markdown-body .pl-mi {
+    font-style: italic;
+    color: #24292e;
+  }
+  
+  .markdown-body .pl-mb {
+    font-weight: bold;
+    color: #24292e;
+  }
+  
+  .markdown-body .pl-md {
+    color: #b31d28;
+    background-color: #ffeef0;
+  }
+  
+  .markdown-body .pl-mi1 {
+    color: #22863a;
+    background-color: #f0fff4;
+  }
+  
+  .markdown-body .pl-mc {
+    color: #e36209;
+    background-color: #ffebda;
+  }
+  
+  .markdown-body .pl-mi2 {
+    color: #f6f8fa;
+    background-color: #005cc5;
+  }
+  
+  .markdown-body .pl-mdr {
+    font-weight: bold;
+    color: #6f42c1;
+  }
+  
+  .markdown-body .pl-ba {
+    color: #586069;
+  }
+  
+  .markdown-body .pl-sg {
+    color: #959da5;
+  }
+  
+  .markdown-body .pl-corl {
+    text-decoration: underline;
+    color: #032f62;
+  }
+  
+  .markdown-body .octicon {
+    display: inline-block;
+    vertical-align: text-top;
+    fill: currentColor;
+  }
+  
+  .markdown-body a {
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+  }
+  
+  .markdown-body a:active,
+  .markdown-body a:hover {
+    outline-width: 0;
+  }
+  
+  .markdown-body strong {
+    font-weight: inherit;
+  }
+  
+  .markdown-body strong {
+    font-weight: bolder;
+  }
+  
+  .markdown-body h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+  }
+  
+  .markdown-body img {
+    border-style: none;
+  }
+  
+  .markdown-body svg:not(:root) {
+    overflow: hidden;
+  }
+  
+  .markdown-body code,
+  .markdown-body kbd,
+  .markdown-body pre {
+    font-family: monospace, monospace;
+    font-size: 1em;
+  }
+  
+  .markdown-body hr {
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
+  }
+  
+  .markdown-body input {
+    font: inherit;
+    margin: 0;
+  }
+  
+  .markdown-body input {
+    overflow: visible;
+  }
+  
+  .markdown-body [type="checkbox"] {
+    box-sizing: border-box;
+    padding: 0;
+  }
+  
+  .markdown-body * {
+    box-sizing: border-box;
+  }
+  
+  .markdown-body input {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+  
+  .markdown-body a {
+    color: #0366d6;
+    text-decoration: none;
+  }
+  
+  .markdown-body a:hover {
+    text-decoration: underline;
+  }
+  
+  .markdown-body strong {
+    font-weight: 600;
+  }
+  
+  .markdown-body hr {
+    height: 0;
+    margin: 15px 0;
+    overflow: hidden;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #dfe2e5;
+  }
+  
+  .markdown-body hr::before {
+    display: table;
+    content: "";
+  }
+  
+  .markdown-body hr::after {
+    display: table;
+    clear: both;
+    content: "";
+  }
+  
+  .markdown-body table {
+    border-spacing: 0;
+    border-collapse: collapse;
+  }
+  
+  .markdown-body td,
+  .markdown-body th {
+    padding: 0;
+  }
+  
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  
+  .markdown-body h1 {
+    font-size: 32px;
+    font-weight: 600;
+  }
+  
+  .markdown-body h2 {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .markdown-body h3 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .markdown-body h4 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .markdown-body h5 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .markdown-body h6 {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .markdown-body p {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .markdown-body blockquote {
+    margin: 0;
+  }
+  
+  .markdown-body ul,
+  .markdown-body ol {
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  
+  .markdown-body ol ol,
+  .markdown-body ul ol {
+    list-style-type: lower-roman;
+  }
+  
+  .markdown-body ul ul ol,
+  .markdown-body ul ol ol,
+  .markdown-body ol ul ol,
+  .markdown-body ol ol ol {
+    list-style-type: lower-alpha;
+  }
+  
+  .markdown-body dd {
+    margin-left: 0;
+  }
+  
+  .markdown-body code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    font-size: 12px;
+  }
+  
+  .markdown-body pre {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    font-size: 12px;
+  }
+  
+  .markdown-body .octicon {
+    vertical-align: text-bottom;
+  }
+  
+  .markdown-body .pl-0 {
+    padding-left: 0 !important;
+  }
+  
+  .markdown-body .pl-1 {
+    padding-left: 4px !important;
+  }
+  
+  .markdown-body .pl-2 {
+    padding-left: 8px !important;
+  }
+  
+  .markdown-body .pl-3 {
+    padding-left: 16px !important;
+  }
+  
+  .markdown-body .pl-4 {
+    padding-left: 24px !important;
+  }
+  
+  .markdown-body .pl-5 {
+    padding-left: 32px !important;
+  }
+  
+  .markdown-body .pl-6 {
+    padding-left: 40px !important;
+  }
+  
+  .markdown-body::before {
+    display: table;
+    content: "";
+  }
+  
+  .markdown-body::after {
+    display: table;
+    clear: both;
+    content: "";
+  }
+  
+  .markdown-body > *:first-child {
+    margin-top: 0 !important;
+  }
+  
+  .markdown-body > *:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  .markdown-body a:not([href]) {
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .markdown-body .anchor {
+    float: left;
+    padding-right: 4px;
+    margin-left: -20px;
+    line-height: 1;
+  }
+  
+  .markdown-body .anchor:focus {
+    outline: none;
+  }
+  
+  .markdown-body p,
+  .markdown-body blockquote,
+  .markdown-body ul,
+  .markdown-body ol,
+  .markdown-body dl,
+  .markdown-body table,
+  .markdown-body pre {
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+  
+  .markdown-body hr {
+    height: 0.25em;
+    padding: 0;
+    margin: 24px 0;
+    background-color: #e1e4e8;
+    border: 0;
+  }
+  
+  .markdown-body blockquote {
+    padding: 0 1em;
+    color: #6a737d;
+    border-left: 0.25em solid #dfe2e5;
+  }
+  
+  .markdown-body blockquote > :first-child {
+    margin-top: 0;
+  }
+  
+  .markdown-body blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  
+  .markdown-body kbd {
+    display: inline-block;
+    padding: 3px 5px;
+    font-size: 11px;
+    line-height: 10px;
+    color: #444d56;
+    vertical-align: middle;
+    background-color: #fafbfc;
+    border: solid 1px #c6cbd1;
+    border-bottom-color: #959da5;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 #959da5;
+  }
+  
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  
+  .markdown-body h1 .octicon-link,
+  .markdown-body h2 .octicon-link,
+  .markdown-body h3 .octicon-link,
+  .markdown-body h4 .octicon-link,
+  .markdown-body h5 .octicon-link,
+  .markdown-body h6 .octicon-link {
+    color: #1b1f23;
+    vertical-align: middle;
+    visibility: hidden;
+  }
+  
+  .markdown-body h1:hover .anchor,
+  .markdown-body h2:hover .anchor,
+  .markdown-body h3:hover .anchor,
+  .markdown-body h4:hover .anchor,
+  .markdown-body h5:hover .anchor,
+  .markdown-body h6:hover .anchor {
+    text-decoration: none;
+  }
+  
+  .markdown-body h1:hover .anchor .octicon-link,
+  .markdown-body h2:hover .anchor .octicon-link,
+  .markdown-body h3:hover .anchor .octicon-link,
+  .markdown-body h4:hover .anchor .octicon-link,
+  .markdown-body h5:hover .anchor .octicon-link,
+  .markdown-body h6:hover .anchor .octicon-link {
+    visibility: visible;
+  }
+  
+  .markdown-body h1 {
+    padding-bottom: 0.3em;
+    font-size: 2em;
+    border-bottom: 1px solid #eaecef;
+  }
+  
+  .markdown-body h2 {
+    padding-bottom: 0.3em;
+    font-size: 1.5em;
+    border-bottom: 1px solid #eaecef;
+  }
+  
+  .markdown-body h3 {
+    font-size: 1.25em;
+  }
+  
+  .markdown-body h4 {
+    font-size: 1em;
+  }
+  
+  .markdown-body h5 {
+    font-size: 0.875em;
+  }
+  
+  .markdown-body h6 {
+    font-size: 0.85em;
+    color: #6a737d;
+  }
+  
+  .markdown-body ul,
+  .markdown-body ol {
+    padding-left: 2em;
+  }
+  
+  .markdown-body ul ul,
+  .markdown-body ul ol,
+  .markdown-body ol ol,
+  .markdown-body ol ul {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  
+  .markdown-body li > p {
+    margin-top: 16px;
+  }
+  
+  .markdown-body li + li {
+    margin-top: 0.25em;
+  }
+  
+  .markdown-body dl {
+    padding: 0;
+  }
+  
+  .markdown-body dl dt {
+    padding: 0;
+    margin-top: 16px;
+    font-size: 1em;
+    font-style: italic;
+    font-weight: 600;
+  }
+  
+  .markdown-body dl dd {
+    padding: 0 16px;
+    margin-bottom: 16px;
+  }
+  
+  .markdown-body table {
+    display: block;
+    width: 100%;
+    overflow: auto;
+  }
+  
+  .markdown-body table th {
+    font-weight: 600;
+  }
+  
+  .markdown-body table th,
+  .markdown-body table td {
+    padding: 6px 13px;
+    border: 1px solid #dfe2e5;
+  }
+  
+  .markdown-body table tr {
+    background-color: #fff;
+    border-top: 1px solid #c6cbd1;
+  }
+  
+  .markdown-body table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+  }
+  
+  .markdown-body img {
+    max-width: 100%;
+    box-sizing: content-box;
+    background-color: #fff;
+  }
+  
+  .markdown-body img[align="right"] {
+    padding-left: 20px;
+  }
+  
+  .markdown-body img[align="left"] {
+    padding-right: 20px;
+  }
+  
+  .markdown-body code {
+    padding: 0;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    margin: 0;
+    font-size: 85%;
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+  }
+  
+  .markdown-body code::before,
+  .markdown-body code::after {
+    letter-spacing: -0.2em;
+    content: "\00a0";
+  }
+  
+  .markdown-body pre {
+    word-wrap: normal;
+  }
+  
+  .markdown-body pre > code {
+    padding: 0;
+    margin: 0;
+    font-size: 100%;
+    word-break: normal;
+    white-space: pre;
+    background: transparent;
+    border: 0;
+  }
+  
+  .markdown-body .highlight {
+    margin-bottom: 16px;
+  }
+  
+  .markdown-body .highlight pre {
+    margin-bottom: 0;
+    word-break: normal;
+  }
+  
+  .markdown-body .highlight pre,
+  .markdown-body pre {
+    padding: 16px;
+    overflow: auto;
+    font-size: 85%;
+    line-height: 1.45;
+    background-color: #f6f8fa;
+    border-radius: 3px;
+  }
+  
+  .markdown-body pre code {
+    display: inline;
+    max-width: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    line-height: inherit;
+    word-wrap: normal;
+    background-color: transparent;
+    border: 0;
+  }
+  
+  .markdown-body pre code::before,
+  .markdown-body pre code::after {
+    content: normal;
+  }
+  
+  .markdown-body .full-commit .btn-outline:not(:disabled):hover {
+    color: #005cc5;
+    border-color: #005cc5;
+  }
+  
+  .markdown-body kbd {
+    display: inline-block;
+    padding: 3px 5px;
+    font: 11px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    line-height: 10px;
+    color: #444d56;
+    vertical-align: middle;
+    background-color: #fafbfc;
+    border: solid 1px #d1d5da;
+    border-bottom-color: #c6cbd1;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 #c6cbd1;
+  }
+  
+  .markdown-body :checked + .radio-label {
+    position: relative;
+    z-index: 1;
+    border-color: #0366d6;
+  }
+  
+  .markdown-body .task-list-item {
+    list-style-type: none;
+  }
+  
+  .markdown-body .task-list-item + .task-list-item {
+    margin-top: 3px;
+  }
+  
+  .markdown-body .task-list-item input {
+    margin: 0 0.2em 0.25em -1.6em;
+    vertical-align: middle;
+  }
+  
+  .markdown-body hr {
+    border-bottom-color: #eee;
+  }
+  </style>
+</head>
+<body>
+<article class="markdown-body">
+<h1 id="第十章作业">第十章作业</h1>
+<p>2015011313 徐鉴劲 计54</p>
+<h2 id="运行代码验证实验">运行代码验证实验</h2>
+<p>python hw5.py即可。</p>
+<p>MLE可能非常慢，需要五分钟左右。</p>
+<h2 id="kmeans的实现方法">Kmeans的实现方法</h2>
+<p>通过sklearn的库函数sklearn.cluster.KMeans实现。</p>
+<h2 id="mle的原理与实现">MLE的原理与实现</h2>
+<h3 id="原理推导">原理推导</h3>
+<p>假设数据的产生是<span class="math inline">\(x \sim P(x | \theta) = \sum P(x | \omega_i, \theta_i) P(\omega_i)\)</span>，即是每一个类又一个产生概率，然后乘上每一个类的先验概率。</p>
+<p>以最大化似然函数转化成最大化l:<span class="math inline">\(l = \sum_i ln(P(x_i|\theta))\)</span></p>
+<p>对参数求导：<span class="math inline">\(\nabla_{\theta_i} l = \sum_k \frac{P(\omega_i)}{P(x_k|\theta)} \nabla_{\theta_i} P(x_k | \omega_i, \theta_i) = \sum_k P(\omega_i | x_k, \theta) \nabla_{\theta_i} P(x_k | \omega_i, \theta_i)\)</span></p>
+<p>前一项<span class="math inline">\(P(\omega_i | x_k, \theta) = \frac{P(x_k| \omega_i, \theta_i)P(\omega_i)}{\sum P(x_k| \omega_i, \theta_i)P(\omega_i)}\)</span>。</p>
+<p>后一项是具体建模函数的求导。</p>
+<p>进行更加具体化的实现，我们假定建模函数是<span class="math inline">\(f_i(x; \theta_i) = P(x_k |\omega_i, \theta) = \mathcal{N}(\mu_i, \sigma_i^2)\)</span>，同时还有一个先验系数<span class="math inline">\(t_i\)</span>。</p>
+<p>整体的函数就是<span class="math inline">\(f(x; \theta) = \sum f_i(x) t_i = P(x | \theta)\)</span>，表示一个数据点的概率。</p>
+<p>所以<span class="math inline">\(l = \sum_i ln(f(x_i; \theta))\)</span></p>
+<p><span class="math inline">\(\nabla_{\theta_i} l = \sum_k \frac{t_i}{f(x_k; \theta)} \nabla_{\theta_i} f_i(x_k; \theta_i)\)</span></p>
+<p>同样，还有对于先验的求导：</p>
+<p><span class="math inline">\(\nabla_{t_i} l = \sum_k \frac{f_i(x_k; \theta_i)}{f(x_k; \theta)}\)</span></p>
+<p>由于<span class="math inline">\(f_i(x; \theta_i) = \mathcal{N}(x; \mu_i, \sigma_i^2) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu_i)^2}{2\sigma_i^2}}\)</span></p>
+<p>所以<span class="math inline">\(\nabla_{\mu_i} f_i(x; \theta_i) = \frac{x - \mu_i}{\sigma_i^2} f_i(x; \theta_i)\)</span>， <span class="math inline">\(\nabla_{\sigma_i} f_i(x; \theta_i) = \frac{(x-\mu_i)^2}{4\sigma_i^3} f_i(x; \theta_i)\)</span></p>
+<h3 id="mle-的算法实现">MLE 的算法实现</h3>
+<p>在题目中，假定(x, y, z)三个变量是相互独立的，可以每次对一个坐标进行MLE，然后再综合起来，不然计算量大大增加。</p>
+<p>我们首先随机初始化各个参数，包括<span class="math inline">\(\mu_i\)</span>, <span class="math inline">\(\sigma_i\)</span>, <span class="math inline">\(t_i\)</span>。</p>
+<p>然后使用梯度下降对参数进行优化：</p>
+<p><span class="math inline">\(\nabla_{t_i} l = \sum_k \frac{f_i(x_k; \theta_i)}{f(x_k; \theta)}\)</span></p>
+<p><span class="math inline">\(\nabla_{\mu_i} l = \sum_k \frac{t_i}{f(x_k; \theta)} \frac{x_k - \mu_i}{\sigma_i^2} f_i(x_k; \theta_i)\)</span></p>
+<p><span class="math inline">\(\nabla_{\sigma_i} l = \sum_k \frac{t_i}{f(x_k; \theta)} \frac{(x-\mu_i)^2}{4\sigma_i^3} f_i(x_k; \theta_i)\)</span></p>
+<h3 id="mle-代码">MLE 代码</h3>
+<p>关于MLE的代码一共有：</p>
+<p><code>get_fi</code>：计算<span class="math inline">\(f_i\)</span>函数。</p>
+<p><code>dataset_loss</code>: 计算log likelihood的数据集合损失函数。</p>
+<h2 id="练习-1">练习 1</h2>
+<h3 id="kmeansn2">Kmeans(N=2)</h3>
+<p>按照上述方法进行Kmeans分类，结果如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">参数</th>
+<th align="left">x</th>
+<th align="left">y</th>
+<th align="left">z</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_1\)</span></td>
+<td align="left">2.70767</td>
+<td align="left">2.70005</td>
+<td align="left">1.26561</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_1\)</span></td>
+<td align="left">3.85410</td>
+<td align="left">4.20658</td>
+<td align="left">3.74709</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_2\)</span></td>
+<td align="left">7.79693</td>
+<td align="left">9.30730</td>
+<td align="left">13.16293</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_2\)</span></td>
+<td align="left">5.98297</td>
+<td align="left">5.69897</td>
+<td align="left">6.16273</td>
+</tr>
+</tbody>
+</table>
+<p>可以调用代码中KMeans函数进行验证。</p>
+<h3 id="mlen2">MLE（N=2)</h3>
+<p>随机选定了一个值作为参数初始化，采用0.2学习率进行最优化，得到参数如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">参数</th>
+<th align="left">x</th>
+<th align="left">y</th>
+<th align="left">z</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(t_1\)</span></td>
+<td align="left">0.515</td>
+<td align="left">0.491</td>
+<td align="left">0.469</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(t_2\)</span></td>
+<td align="left">0.485</td>
+<td align="left">0.509</td>
+<td align="left">0.531</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_1\)</span></td>
+<td align="left">1.36</td>
+<td align="left">1.29</td>
+<td align="left">0.867</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_1\)</span></td>
+<td align="left">3.43</td>
+<td align="left">3.24</td>
+<td align="left">3.38</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_2\)</span></td>
+<td align="left">6.87</td>
+<td align="left">7.22</td>
+<td align="left">7.55</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_2\)</span></td>
+<td align="left">4.96</td>
+<td align="left">5.14</td>
+<td align="left">6.43</td>
+</tr>
+</tbody>
+</table>
+<p>训练loss曲线如下：</p>
+<div class="figure">
+<img src="rawN2MLE.png" />
+
+</div>
+<h3 id="mlen2经过kmeans初始化">MLE(N=2)经过KMeans初始化</h3>
+<p>训练loss曲线如下：</p>
+<div class="figure">
+<img src="initN2MLE.png" />
+
+</div>
+<h3 id="对比分析">对比分析</h3>
+<p>MLE的结果比Kmeans准确，经过初始化后的MLE结果更加准确。</p>
+<h2 id="练习-2">练习 2</h2>
+<h3 id="kmeansn3">Kmeans(N=3)</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">参数</th>
+<th align="left">x</th>
+<th align="left">y</th>
+<th align="left">z</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_1\)</span></td>
+<td align="left">1.84897</td>
+<td align="left">1.79317</td>
+<td align="left">1.67362</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\mu_2\)</span></td>
+<td align="left">6.60972</td>
+<td align="left">7.38586</td>
+<td align="left">17.31791</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_3\)</span></td>
+<td align="left">9.04562</td>
+<td align="left">10.96022</td>
+<td align="left">3.87745</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_1\)</span></td>
+<td align="left">2.76104</td>
+<td align="left">2.77064</td>
+<td align="left">3.35083</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\sigma_2\)</span></td>
+<td align="left">5.69546</td>
+<td align="left">5.65530</td>
+<td align="left">5.53523</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_3\)</span></td>
+<td align="left">5.36132</td>
+<td align="left">4.61385</td>
+<td align="left">5.52803</td>
+</tr>
+</tbody>
+</table>
+<p>准确率是43.7%.</p>
+<h3 id="mlen3">MLE（N=3)</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">参数</th>
+<th align="left">x</th>
+<th align="left">y</th>
+<th align="left">z</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<p>|<span class="math inline">\(\mu_1\)</span> |1.34249|1.26025|0.74879| |<span class="math inline">\(\mu_2\)</span> |4.83537|4.88901|4.93523| |<span class="math inline">\(\mu_3\)</span> |10.88278|10.98627|11.74815| |<span class="math inline">\(\sigma_1\)</span>|3.06363|3.00015|3.40527| |<span class="math inline">\(\sigma_2\)</span>|2.40334|2.32590|2.19743| |<span class="math inline">\(\sigma_3\)</span>|3.10318|3.23603|4.34140|</p>
+<div class="figure">
+<img src="rawN3MLE.png" />
+
+</div>
+<p>准确率是90%</p>
+<h3 id="mlen3经过kmeans初始化">MLE(N=3)经过KMeans初始化</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">参数</th>
+<th align="left">x</th>
+<th align="left">y</th>
+<th align="left">z</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_1\)</span></td>
+<td align="left">1.96196</td>
+<td align="left">1.84134</td>
+<td align="left">1.70183</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\mu_2\)</span></td>
+<td align="left">6.61506</td>
+<td align="left">7.38438</td>
+<td align="left">17.30537</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_3\)</span></td>
+<td align="left">9.06733</td>
+<td align="left">10.97672</td>
+<td align="left">3.88240</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_1\)</span></td>
+<td align="left">3.46472</td>
+<td align="left">3.46753</td>
+<td align="left">3.85795</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\sigma_2\)</span></td>
+<td align="left">5.87325</td>
+<td align="left">5.84069</td>
+<td align="left">5.74550</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\sigma_3\)</span></td>
+<td align="left">5.54480</td>
+<td align="left">4.81557</td>
+<td align="left">5.84515</td>
+</tr>
+</tbody>
+</table>
+<div class="figure">
+<img src="initN3MLE.png" />
+
+</div>
+<p>准确率是95%</p>
+<h3 id="结果比较">结果比较</h3>
+<p>Kmeans的结果最差，MLE未经过初始化的次之，最好的是经过初始化的MLE.</p>
+</article>
+</body>
+</html>
