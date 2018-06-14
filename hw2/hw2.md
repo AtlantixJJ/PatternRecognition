@@ -6,7 +6,7 @@
 
 ### (a)
 
-Error probability $P(error | x) = max[P(\omega_1|x), P(\omega_2|x)$, in which $P(\omega_1|x) = \frac{P(x|\omega_1)P((\omega_1)}{p(x)}$, and $P(\omega_2|x)$ is similar. Minimize error probability gives the following decision rule:
+Error probability $P(error | x) = min[P(\omega_1|x), P(\omega_2|x)]$, in which $P(\omega_1|x) = \frac{P(x|\omega_1)P((\omega_1)}{p(x)}$, and $P(\omega_2|x)$ is similar to this. Minimize error probability gives the following decision rule:
 
 Select $\omega_1$ if $P(x|\omega_1) > P(x|\omega_2)$. Select $\omega_2$ otherwise.
 
@@ -14,9 +14,15 @@ Select $\omega_1$ if $P(x|\omega_1) > P(x|\omega_2)$. Select $\omega_2$ otherwis
 
 Suppose $R(\omega|x)$ is the risk of selecting $\omega$ when $x$ is observed. This error risk matrix gives the following risk expression:
 
-$R(\omega_1|x) = P(\omega_2|x)$, $R(\omega_2|x) = 0.5 P(\omega_1|x)$. To minimize the risk, the following dicision rule can be reached:
+$R(\omega_1|x) = P(\omega_2|x)$, $R(\omega_2|x) = 0.5 P(\omega_1|x)$.
+
+To minimize the risk, the following dicision rule can be reached:
 
 If $\frac{P(\omega_1|x)}{P(\omega_2|x)} < \frac{1}{2}$, select $\omega_2$. Otherwise, select $\omega_1$.
+
+## Problem 2
+
+
 
 ### Experiment
 
@@ -32,7 +38,7 @@ Set $\mu$ to be 3, the accuracy is 100%. The feature probability is also shown b
 
 ![](expr/MinerrorSurface_3.png)
 
-## Problem 2
+## Problem 1
 
 ### (a)
 
@@ -73,11 +79,23 @@ $d_1 = d_2$.
 
 Original probability density is $P(\textbf{x}_0) = C e^{-\frac{1}{2}(x_0 - \mu)^T \Sigma^{-1} (x_0 - \mu)}$.
 
-The tranformed probability density is $P(\tilde \textbf{x}_0) = C e^{-\frac{1}{2}(\tilde x_0 - T^t\mu)^T (T^t \Sigma T)^{-1} (\tilde x_0 - T^t \mu)}$, in which $\tilde \textbf{x}_0 = T^t \textbf{x}_0$. 
+The tranformed probability density is 
 
-Thus we have $P(\tilde \textbf{x}_0) = C e^{-\frac{1}{2} (x_0 - \mu)^t T (T^t \Sigma T)^{-1} T^t (x_0 - \mu)}$. As $T$ is a linear tranformation, it is not singular, we have $(T^t \Sigma T)^{-1} = T^{-1} \Sigma^{-1} (T^{-1})^t$, so all the $T$ can be canceled out:
+$P(\tilde{\textbf{x}_0})$ = $C e^{-\frac{1}{2}(\tilde x_0 - T^t\mu)^T (T^t \Sigma T)^{-1} (\tilde x_0 - T^t \mu)}$
 
-$P(\tilde \textbf{x}_0) = C e^{-\frac{1}{2} (x_0 - \mu)^t T T^{-1} \Sigma^{-1} (T^{-1})^t T^t (x_0 - \mu)} = C e^{-\frac{1}{2}(x_0 - \mu)^T \Sigma^{-1} (x_0 - \mu)} = P(\textbf{x}_0)$.
+in which $\tilde{\textbf{x}_0}$ = $T^t \textbf{x}_0$. 
+
+Thus we have
+
+$P(\tilde{\textbf{x}_0})$ = $C e^{-\frac{1}{2} (x_0 - \mu)^t T (T^t \Sigma T)^{-1} T^t (x_0 - \mu)}$
+
+As $T$ is a linear tranformation, it is not singular, we have
+
+$(T^t \Sigma T)^{-1} = T^{-1} \Sigma^{-1} (T^{-1})^t$
+
+so all the $T$ can be canceled out:
+
+$P(\tilde{\textbf{x}_0})$ = $C e^{-\frac{1}{2} (x_0 - \mu)^t T T^{-1} \Sigma^{-1} (T^{-1})^t T^t (x_0 - \mu)}$ = $C e^{-\frac{1}{2}(x_0 - \mu)^T \Sigma^{-1} (x_0 - \mu)} = P(\textbf{x}_0)$.
 
 
 ### (f)
