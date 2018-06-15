@@ -22,7 +22,84 @@ If $\frac{P(\omega_1|x)}{P(\omega_2|x)} < \frac{1}{2}$, select $\omega_2$. Other
 
 ## Problem 2
 
+Using a zero-one risk matrix, we obtain the risk selecting class i given feature x
 
+$R(\omega_i|x) = \sum_j P(\omega_j|x)$
+ 
+And minimizing this risk gives $R(x) = min_i R(\omega_i | x)$.
+
+And the corresponding decision is $\omega_i = argmin_{\omega_i} R(\omega_i | x) = argmax_{\omega_i} P(\omega_i | x)$.
+
+Transform the posterior to likelihood and prior
+
+$P(\omega_i | x) = \frac{P(x | \omega_i) P(\omega_i)}{P(x)}$
+
+Notice that $P(x | \omega_i)$ is defined as $\left [ \frac{\delta_i - |x - \mu_i|}{\delta_i^2} \right ]^+$, so the decision function should be
+
+$f(x) = argmax_{i} \left [ \frac{\delta_i - |x - \mu_i|}{\delta_i^2} \right ]^+$
+
+### (a)
+
+Suppose that for $\omega_1$ and $\omega_2$, their delta are such that cause only one intersection, that is $\mu_2 - \mu_1 < \delta_2 + \delta_1$ and that $\mu_1 + \delta_1 < \mu_2 + \delta_2$.
+
+And for $\omega_2$ and $\omega_3$, the constraint is similar.
+
+In this case, there is only one decision point between each category.
+
+For $\omega_1$ and $\omega_2$, the intersection is at $x_1^*$:
+
+$\frac{\delta_1 - x + \mu_1}{\delta_1^2} = \frac{\delta_2 - \mu_2 + x}{\delta_2^2}$
+
+this gives:
+
+$x_1^* = \frac{\delta_2^2 \delta_1 - \delta_1^2 \delta_2 + \delta_1^2\mu_2 + \delta_2^2\mu_1}{\delta_1^2 + \delta_2^2}$
+
+and $x_2^*$ is the decision point between $\omega_2$ and $\omega_3$, which is similar:
+
+$x_2^* = \frac{\delta_3^2 (\delta_2 + \mu_2) - \delta_2^2 \delta_3 + \delta_2^2 \mu_3)}{\delta_2^2 + \delta_3^2}$
+
+
+### (b)
+
+In this case, one triangular is flat such that it intersects with another triangle at two points, $x_1^*$ and $x_2^*$.
+
+This place a constraint on $\delta$ that 
+
+$\delta_1  + \mu_1 > \delta_2 + \mu_2$
+
+Also, $-\delta_1  + \mu_1 > - \delta_2 + \mu_2$ is also possible, which is similar to this.
+
+this constraint indicates that line $y_0 = \frac{\delta_1 - x + \mu_1}{\delta_1^2}$ intersects with both $y_1 = \frac{\delta_2 + x - \mu_2}{\delta_2^2}$ and $y_2 = \frac{\delta_2 - x + \mu_2}{\delta_2^2}$, resulting in point $x_1^*$ and $x_2^*$.
+
+Solve the equation gives:
+
+$x_1^* = \frac{\delta_2^2 \delta_1 - \delta_1^2 \delta_2 + \delta_1^2\mu_2 + \delta_2^2\mu_1}{\delta_1^2 + \delta_2^2}$
+
+$x_2^* = \frac{\delta_2^2 \delta_1 - \delta_1^2 \delta_2 + \delta_1^2\mu_2 - \delta_2^2\mu_1}{\delta_2^2 - \delta_1^2}$
+
+### (c)
+
+According to the formula above, we can get three decision point: $x_1^* = \frac{1}{3}$, $x_2^* = \frac{2}{3}$.
+
+Select $\omega_1$ if $-1 \gt x \le \frac{1}{3}$.
+
+Select $\omega_2$ if $\frac{1}{3} \lt x \le \frac{2}{3}$.
+
+Select $\omega_3$ if $\frac{2}{3} \lt x \le 2$
+
+### (d)
+
+The risk is given by $R(x) = min_i R(\omega_i | x) = 1 - P(f(x)|x)$, which has shape:
+
+The whole probability distribution, is shown in the figure below:
+
+![](fig/prob2.png)
+
+And the corresponding minimal risk function is:
+
+![](fig/prob2_minrisk.png)
+
+## Porblem 3
 
 ### Experiment
 
