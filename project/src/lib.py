@@ -9,9 +9,12 @@ import numpy as np
 INST_TYPE = ["A1", "A3", "B2", "B3"]
 THRESHOLD1 = 0.05 #0.002
 THRESHOLD2 = 0.10 #0.004
-TLEN = 200
+TLEN = 40 # LEN of average time
+SLOPE_DENOTE_LEN = 40
+MEANPRICE = "meanPrice"+str(TLEN)
+SLOPEPRICE = "slopePrice"+str(SLOPE_DENOTE_LEN)
+CLASSIFICATION_METHOD = "maxdiff"
 
-MEANPRICE = "meanPrice200"
 
 ### process ###
 ###############
@@ -36,11 +39,37 @@ def get_class(div):
 
     return ans
 
+def get_class_maxdiff(pd, nd):
+    """
+    pd, nd: positive difference, negative difference
+    """
+    THETA_1 = 0.1 / 100
+    THETA_2 = 0.2 / 100
+
+    if pd > nd:
+        if pd > THETA_2:
+            return 5
+        elif pd > THETA_1:
+            return 4
+        elif pd >= 0:
+            return 3
+        else:
+            print("Wrong maxdiff: positive difference is negative")
+    else:
+        if nd > THETA_2:
+            return 1
+        elif nd > THETA_1:
+            return 2
+        elif nd >= 0:
+            return 3
+        else:
+            print("Wrong maxdiff: negative difference is negative")
+
+
 def get_mean_price(dic):
     """
     Smooth the data by averaging with window size 200.
     """
-    WIN_SIZE = 200
     for inst_type in INST_TYPE:
         try:
             dic[inst_type]['bidPrice1']
@@ -50,20 +79,19 @@ def get_mean_price(dic):
         
         x = dic[inst_type]['bidPrice1']
         m = np.zeros_like(x)
-        for i in range(x.shape[0]-WIN_SIZE):
-            m[i] = x[i:i+WIN_SIZE].mean()
-        dic[inst_type]['meanPrice'+str(WIN_SIZE)] = m
+        for i in range(x.shape[0]-TLEN):
+            m[i] = x[i:i+TLEN].mean()
+        dic[inst_type][MEANPRICE] = m
 
 def get_fit_slope(dic):
     """
     Compute slope in future 40 points in order to determine its tendency.
     """
-    WIN_SIZE = 40
-    x = np.array(range(0, WIN_SIZE))
+    x = np.array(range(0, SLOPE_DENOTE_LEN))
     x2 = x ** 2
     sum_x = x.sum()
     sum_x2 = x2.sum()
-    div = WIN_SIZE * sum_x2 - sum_x ** 2
+    div = SLOPE_DENOTE_LEN * sum_x2 - sum_x ** 2
 
     for inst_type in INST_TYPE:
         try:
@@ -72,32 +100,77 @@ def get_fit_slope(dic):
             #print(inst_type + " not exist")
             continue
         
-        Y = dic[inst_type]['meanPrice200']
+        Y = dic[inst_type][MEANPRICE]
         k = np.zeros_like(Y, dtype="float32")
-        for i in range(Y.shape[0]-WIN_SIZE):
+        for i in range(Y.shape[0]-SLOPE_DENOTE_LEN):
             if Y[i] < 1:
                 break
-            y = Y[i:i+WIN_SIZE]
-            k[i] = ((WIN_SIZE * (x * y).sum() - sum_x * y.sum()) / div) * 10000.0 / Y[i]
+            y = Y[i:i+SLOPE_DENOTE_LEN]
+            k[i] = ((SLOPE_DENOTE_LEN * (x * y).sum() - sum_x * y.sum()) / div) * 10000.0 / Y[i]
 
-        dic[inst_type]['slopePrice'+str(WIN_SIZE)] = k
+        dic[inst_type][SLOPEPRICE] = k
 
 def denote_dataset(dic):
+    if CLASSIFICATION_METHOD == "slope":
+        return denote_dataset_slope(dic)
+    elif CLASSIFICATION_METHOD == "maxdiff":
+        return denote_dataset_maxdiff(dic)
+
+def denote_dataset_slope(dic):
     """
     Give label to sequence
     """
     for inst_type in INST_TYPE:
         try:
-            dic[inst_type]['slopePrice40']
+            dic[inst_type][SLOPEPRICE]
         except KeyError:
             #print(inst_type + " not exist")
             continue
 
-        x = dic[inst_type]['slopePrice40']
+        x = dic[inst_type][SLOPEPRICE]
         label = np.zeros_like(x, dtype="uint8")
-        for i in range(x.shape[0]-200):
+        for i in range(x.shape[0]-TLEN):
             label[i] = get_class(x[i])
         dic[inst_type]['label'] = label
+
+def denote_dataset_maxdiff(dic):
+    """
+    Give label to sequence by standard method
+    """
+    for inst_type in INST_TYPE:
+        try:
+            dic[inst_type]['bidPrice1']
+        except KeyError:
+            #print(inst_type + " not exist")
+            continue
+
+        x = dic[inst_type]['bidPrice1']
+        label = np.zeros_like(x, dtype="uint8")
+        for i in range(x.shape[0]-TLEN):
+            cur = x[i]
+            maxi, mini = x[i:i+TLEN].max(), x[i:i+TLEN].min()
+            pd = float(maxi - cur) / cur
+            nd = float(cur - mini ) / cur
+            label[i] = get_class_maxdiff(pd, nd)
+            #print(pd, nd)
+        dic[inst_type]['label'] = label
+
+### Plot ###
+############
+
+def show_label(dic, contract_name="A1", st=0, ed=1000):
+    colors = ['blue', 'cyan', 'grey', 'salmon', 'red']
+    arr = dic[contract_name]["label"][st:ed]
+    c = [colors[x-1] for x in arr]
+    plt.scatter(range(st, ed), dic[contract_name]['bidPrice1'][st:ed], s=1, c=c)
+    #plt.plot(range(st, ed), dic[contract_name][MEANPRICE][st:ed], c="r")
+    plt.savefig("fig/" + contract_name + "label.png")
+    plt.close()
+
+def plot(y, name, color="r"):
+    plt.plot(y, color)
+    plt.savefig(name+".png")
+    plt.close()
 
 ### IO ###
 ##########
@@ -138,15 +211,19 @@ def extract_data(raw_data, concise=False):
                 continue
 
             k, v = items[5].split("=")
+            v = int(v)
+            if v == 0:
+                continue
+
             try:
-                dic[inst_type][k].append(int(v))
+                dic[inst_type][k].append(v)
             except KeyError:
-                dic[inst_type][k] = [int(v)]
+                dic[inst_type][k] = [v]
             k, v = items[7].split("=")
             try:
-                dic[inst_type][k].append(int(v))
+                dic[inst_type][k].append(v)
             except KeyError:
-                dic[inst_type][k] = [int(v)]
+                dic[inst_type][k] = [v]
 
     else:
         for line in raw_data:
@@ -186,35 +263,9 @@ def get_dataset(filename, concise=False):
     denote_dataset(dic)
     return dic
 
-def show_label(dic, contract_name="A1", st=0, ed=1000):
-    colors = ['blue', 'cyan', 'grey', 'salmon', 'red']
-    arr = dic[contract_name]["label"][st:ed]
-    c = [colors[x-1] for x in arr]
-    plt.scatter(range(st, ed), dic[contract_name]['bidPrice1'][st:ed], s=1, c=c)
-    plt.plot(range(st, ed), dic[contract_name]['meanPrice200'][st:ed], c="r")
-    plt.savefig("fig/" + contract_name + "label.png")
-    plt.close()
-
 def compare_normalized(dic, contract_name="A1", comp=[""]):
     pass
 
-def plot(y, name, color="r"):
-    plt.plot(y, color)
-    plt.savefig(name+".png")
-    plt.close()
-
-def analysis_diff_ask_bid(dic):
-    diff_ask_bid = dic['A1']['askPrice1'] - dic['A1']['bidPrice1'] 
-    count = 0
-    for i in range(diff_ask_bid.shape[0]):
-        if diff_ask_bid[i] > 5000:
-            count += 1
-            diff_ask = dic['A1']['askPrice1'][i] - dic['A1']['askPrice1'][i-1]
-            diff_bid = dic['A1']['bidPrice1'][i] - dic['A1']['bidPrice1'][i-1]
-            print("%d %d = %d %d" % (diff_ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
-
-    print("%d %f" % (count, float(count) / diff_ask_bid.shape[0]))
-    plot(diff_ask_bid, "fig/A1_diff_askPrice1_bidPrice1")
 
 ### DEPRECATED ###
 ##################

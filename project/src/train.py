@@ -7,14 +7,22 @@ import sklearn.linear_model
 import numpy as np
 import lib
 
-MEANPRICE = "meanPrice200"
-TLEN = 200
-WIN_SIZE = 100
+MEANPRICE = lib.MEANPRICE
+TLEN = lib.TLEN
+INPUT_LEN = 100 # the length of network input
 PREDICT_LEN = 40
 TRAIN_PORTION = 0.8
-DEP_LEN = TLEN+WIN_SIZE+PREDICT_LEN
+DEP_LEN = TLEN+INPUT_LEN+PREDICT_LEN
 
-def linear2class(Y):
+CLASSIFICATION_METHOD = lib.CLASSIFICATION_METHOD
+
+def lienar2class(Y):
+    if CLASSIFICATION_METHOD == "slope":
+        return linear2class_slope(Y)
+    elif CLASSIFICATION_METHOD == "maxdiff":
+        return linear2class_maxdiff(Y)
+
+def linear2class_slope(Y):
     """
     Y's shape should be (N_SAMPLE, PREDICT_LEN)
     """
@@ -31,6 +39,20 @@ def linear2class(Y):
         y = Y[i:i+PREDICT_LEN]
         k = ((PREDICT_LEN * (x * y).sum() - sum_x * y.sum()) / div) * 10000.0 / float(y[0])
         est_label[i] = lib.get_class(k)
+    
+    return est_label
+
+def linear2class_maxdiff(Y):
+    """
+    Y's shape should be (N_SAMPLE, PREDICT_LEN)
+    """
+    est_label = np.zeros_like(Y, dtype="uint8")
+    for i in range(Y.shape[0]-TLEN):
+        cur = Y[i]
+        maxi, mini = Y[i:i+TLEN].max(), Y[i:i+TLEN].min()
+        pd = float(maxi - cur) / cur
+        nd = float(cur - mini ) / cur
+        est_label[i] = lib.get_class_maxdiff(pd, nd)
     
     return est_label
 
@@ -53,18 +75,22 @@ def smooth_predict(reg, dataset_X):
     avg_Y[PREDICT_LEN:-PREDICT_LEN] /= float(PREDICT_LEN)
     return avg_Y
 
-def testacc_linear(reg, dataset_X, label, smooth=True):
+def testacc_linear(reg, dataset_X, dataset_Y, label, smooth=True):
     print("Test accuracy of linear regression: ")
 
     if smooth:
-        avg_Y = smooth_predict(reg, dataset_X)
-        est_label = linear2class(avg_Y)
+        est_Y = smooth_predict(reg, dataset_X)
     else:
         est_Y = reg.predict(dataset_X[::PREDICT_LEN]).reshape(-1)
-        est_label = linear2class(est_Y)
+
+    est_label = lienar2class(est_Y)
 
     acc = accuracy(est_label[:label.shape[0]], label)
-    return acc
+    err_list = np.abs(dataset_Y - est_Y[:dataset_Y.shape[0]])
+    err = err_list.mean()
+    err_std = (err_list - err).std()
+    print("Err %f Std %f" % (err, err_std))
+    return acc, err
 
 def testacc_logistic(reg, dataset_X, label):
     print("Test accuracy of logistic regression: ")
@@ -92,45 +118,47 @@ def show_result_linear(reg, dataset_X, dataset_Y, st=0, ed=16000, name="linearfi
 def get_linear_dataset(dic):
     raw_seq = dic[MEANPRICE]
     X = []
+    # 0~INPUT_LEN -> INPUT_LEN+1~INPUT_LEN+PREDICT_LEN
     for i in range(raw_seq.shape[0]-DEP_LEN):
-        X.append(raw_seq[i:i+WIN_SIZE])
+        X.append(raw_seq[i:i+INPUT_LEN])
     X = np.array(X)
 
     border = int(X.shape[0] * TRAIN_PORTION)
 
     Y = []
     for i in range(raw_seq.shape[0]-DEP_LEN):
-        Y.append(raw_seq[i+WIN_SIZE: i+WIN_SIZE+PREDICT_LEN])
+        Y.append(raw_seq[INPUT_LEN+i: INPUT_LEN+i+PREDICT_LEN])
     Y = np.array(Y)
 
     train_X, test_X = X[:border], X[border:]
-    train_Y, test_Y = Y[:border], dic['label'][WIN_SIZE + border:WIN_SIZE + border + test_X.shape[0] - PREDICT_LEN]
-    return train_X, test_X, train_Y, test_Y
+    train_Y, label = Y[:border], dic['label'][INPUT_LEN + border: INPUT_LEN + border + test_X.shape[0] - PREDICT_LEN]
+    test_Y = raw_seq[INPUT_LEN+border:INPUT_LEN + border + test_X.shape[0] - PREDICT_LEN]
+    return train_X, test_X, train_Y, test_Y, label
 
 def get_logistic_dataset(dic):
     raw_seq = dic[MEANPRICE]
     X = []
     for i in range(raw_seq.shape[0]-DEP_LEN):
-        X.append(raw_seq[i:i+WIN_SIZE])
+        X.append(raw_seq[i:i+INPUT_LEN])
     X = np.array(X)
 
     border = int(X.shape[0] * TRAIN_PORTION)
 
     train_X, test_X = X[:border], X[border:]
-    train_Y, test_Y = dic['label'][WIN_SIZE:WIN_SIZE + border], dic['label'][WIN_SIZE + border:WIN_SIZE + border + test_X.shape[0] - PREDICT_LEN]
+    train_Y, test_Y = dic['label'][INPUT_LEN:INPUT_LEN + border], dic['label'][INPUT_LEN + border:INPUT_LEN + border + test_X.shape[0] - PREDICT_LEN]
     return train_X, test_X, train_Y, test_Y
 
 def linear_fit(dic):
     model = sklearn.linear_model.LinearRegression()
 
-    train_X, test_X, train_Y, test_Y = get_linear_dataset(dic)
+    train_X, test_X, train_Y, test_Y, label = get_linear_dataset(dic)
 
     print(train_X.shape, train_Y.shape)
     print(test_X.shape, test_Y.shape)
 
     reg = model.fit(train_X, train_Y)
 
-    return reg, train_X, test_X, train_Y, test_Y
+    return reg, train_X, test_X, train_Y, test_Y, label
 
 def linear_classify(dic):
     model = sklearn.linear_model.LogisticRegression()

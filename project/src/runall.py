@@ -13,23 +13,30 @@ DATA_DIR = "futuresData/"
 
 def testall(method):
     all_acc = []
+    all_err = []
     result_dic = {}
-    for f in os.listdir(DATA_DIR):
+    err_dic = {}
+    dirs = os.listdir(DATA_DIR)
+    dirs.sort()
+    for f in dirs:
         filename = DATA_DIR + f
         dic = lib.get_dataset(filename, True)
         for k in dic.keys():
-            if len(dic[k].keys()) > 1 and dic[k]['meanPrice200'].shape[0] > 1000:
+            if len(dic[k].keys()) > 1 and dic[k][lib.MEANPRICE].shape[0] > 1000:
 
-                acc = test_alg(dic[k], method)
+                acc, err = test_alg(dic[k], method)
                 name = f[:-4] + "_" + k
 
                 result_dic[name] = acc
+                if err != -1:
+                    err_dic[name] = err
 
                 all_acc.append(acc)
-                print("%s %f" % (name, acc))
+                all_err.append(err)
+                print("%s %.5f %.5f" % (name, acc, err))
 
-    np.savez(method, result_dic)
-    return result_dic
+    np.savez(method, [result_dic, all_err])
+    return result_dic, err_dic
 
 def summary_dic(resdic):
     all_vals = np.array(resdic.values())
@@ -60,18 +67,19 @@ def summary_dic(resdic):
 
 def test_alg(dic, method):
     if method == "SMOOTHLINEAR":
-        reg, train_X, test_X, train_Y, test_Y = train.linear_fit(dic)
-        acc = train.testacc_linear(reg, test_X, test_Y)
+        reg, train_X, test_X, train_Y, test_Y, test_label = train.linear_fit(dic)
+        acc, err = train.testacc_linear(reg, test_X, test_Y, test_label)
 
     elif method == "LINEAR":
-        reg, train_X, test_X, train_Y, test_Y = train.linear_fit(dic)
-        acc = train.testacc_linear(reg, test_X, test_Y, smooth=False)
+        reg, train_X, test_X, train_Y, test_Y, test_label = train.linear_fit(dic)
+        acc, err = train.testacc_linear(reg, test_X, test_Y, test_label, smooth=False)
 
     elif method == "LOGISTIC":
         reg, train_X, test_X, train_Y, test_Y = train.linear_classify(dic)
         acc = train.testacc_logistic(reg, test_X, test_Y)
+        err = -1
     
-    return acc
+    return acc, err
 
 def analyze_from_npz(fname):
     result_dic = np.load(fname)['arr_0'].tolist()

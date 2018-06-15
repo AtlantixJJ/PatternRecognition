@@ -9,6 +9,19 @@ import lib
 
 filename = "futuresData/0-20170704-day.log"
 
+def analysis_diff_ask_bid(dic):
+    diff_ask_bid = dic['A1']['askPrice1'] - dic['A1']['bidPrice1'] 
+    count = 0
+    for i in range(diff_ask_bid.shape[0]):
+        if diff_ask_bid[i] > 5000:
+            count += 1
+            diff_ask = dic['A1']['askPrice1'][i] - dic['A1']['askPrice1'][i-1]
+            diff_bid = dic['A1']['bidPrice1'][i] - dic['A1']['bidPrice1'][i-1]
+            print("%d %d = %d %d" % (diff_ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
+
+    print("%d %f" % (count, float(count) / diff_ask_bid.shape[0]))
+    lib.plot(diff_ask_bid, "fig/A1_diff_askPrice1_bidPrice1")
+
 def plot_contract(dic, contract_name="A1", st=0, ed=1000):
     for k, v in dic[contract_name].items():
         plt.plot(v[st:ed])
@@ -50,11 +63,11 @@ dic = lib.extract_data(raw_data)
 
 lib.get_mean_price(dic)
 lib.get_fit_slope(dic)
-lib.denote_dataset(dic)
+lib.denote_dataset_maxdiff(dic)
 lib.show_label(dic, st=5000, ed=10000)
 lib.show_label(dic, contract_name="A3", st=5000, ed=10000)
 print(dic["A1"].keys())
-plot_compare(dic, comp=['bidPrice1', "meanPrice200", "slopePrice40"], st=5000, ed=10000, ifNorm=True)
+plot_compare(dic, comp=['bidPrice1', lib.MEANPRICE, lib.SLOPEPRICE], st=5000, ed=10000, ifNorm=True)
 plot_compare(dic, comp=['askPrice1', 'bidPrice1'], st=0, ed=1000, ifNorm=False)
-lib.analysis_diff_ask_bid(dic)
+analysis_diff_ask_bid(dic)
 #get_figures(dic)
