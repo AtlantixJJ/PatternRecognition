@@ -99,7 +99,45 @@ And the corresponding minimal risk function is:
 
 ![](fig/prob2_minrisk.png)
 
-## Porblem 3
+## Problem 3
+
+### (a) Show the minimal risk decision rule
+
+Suppose the total risk is $R(\omega_i|x)$, we have
+
+$R(\alpha_i|x) = \sum_j \lambda(\alpha_i | \omega_j) P(\omega_j|x) = \lambda_s \sum_{j \ne i} P(\omega_j|x)$
+
+for i = 1,...,c and 
+
+$R(\alpha_{c+1} = \sum_j \lambda(\alpha_{c+1} | \omega_j) P(\omega_j|x) = \lambda_r \sum_j P(\omega_j|x) = \lambda_r$
+
+To minimize the risk, we have $f(x) = argmax_{i=1,...,c+1} R(\alpha_i|x)$.
+
+If we want to decide $\omega_i$, then $R(\alpha_i|x)$ should be smaller than all other terms, which indicates that $P(\omega_i|x)$ is the largest over other possibilities, $P(\omega_i|x) > P(\omega_j|x)$ for all other $j \ne i$.
+
+Also it risk should be smaller than rejection
+
+$\lambda_s \sum_{j \ne i} P(\omega_j|x) \le \lambda_r \Rightarrow$
+
+$\lambda_s \sum_j P(\omega_j|x) \le \lambda_r + \lambda_s P(\omega_i) \Rightarrow$
+
+$1 - \frac{\lambda_r}{\lambda_s} \le P(\omega_i)$
+
+### (b) what happens if $\lambda_r=0$
+
+The condition above becomes
+
+$1 \le P(\omega_i)$
+
+When $\lambda_r=0$, it means that whatever the model predicts, choosing to reject resulting in zero risk. According to this decision rule, in most cases the algorithm will decide to reject, unless the predicted probability is one hundred percent.
+
+### (c) what happens if $\lambda_r > \lambda_s$
+
+The condition above becomes
+
+$0 \le P(\omega_i)$
+
+This means that whatever the model predicts, the risk of reject is always larger than accept a category. So in all cases, the algorithm will not choose to reject.
 
 ### Experiment
 
@@ -109,11 +147,11 @@ Run the experiment:
 
 Set $\mu$ to be 1.5, the accuracy is about 70% ~ 80%, which varies greatly. To be specific, the accuracy of $\omega_1$ and $\omega_2$ are close to each other. In addition, the figure below shows the feature probability $P(x|\omega_1)$. Red and blue represent $\omega_1$, $\omega_2$ respectively.
 
-![](expr/MinerrorSurface_1.5.png)
+![](fig/MinerrorSurface_1.5.png)
 
 Set $\mu$ to be 3, the accuracy is 100%. The feature probability is also shown below.
 
-![](expr/MinerrorSurface_3.png)
+![](fig/MinerrorSurface_3.png)
 
 ## Problem 1
 
