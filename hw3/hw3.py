@@ -51,7 +51,7 @@ def get_dataset(M, S, n_samples=[1000, 1000, 1000], N=1000):
     label = label[indice]
     return data, label
 
-def guassian(x, mu=0, sigma=1):
+def gaussian(x, mu=0, sigma=1):
     """
     Compute normal function
     Args:
@@ -62,9 +62,9 @@ def guassian(x, mu=0, sigma=1):
 
 def get_posterior(params):
     def p_x_c1_f(x):
-        return guassian(x, np.array([params[0], params[0]]), params[2])
+        return gaussian(x, np.array([params[0], params[0]]), params[2])
     def p_x_c2_f(x):
-        return guassian(x, np.array([params[1], params[1]]), params[3])
+        return gaussian(x, np.array([params[1], params[1]]), params[3])
     return p_x_c1_f, p_x_c2_f
 
 def eval(data, func):

@@ -2,6 +2,16 @@
 
 2015011313 徐鉴劲 计54
 
+To get all the figures in this assignments, run
+
+```
+python src/plot2.py
+python src/plot4.py
+python src/plot5.py
+```
+
+which will generator corresponding figure for problems.
+
 ## Problem 1
 
 ### (a)
@@ -119,9 +129,9 @@ Also it risk should be smaller than rejection
 
 $\lambda_s \sum_{j \ne i} P(\omega_j|x) \le \lambda_r \Rightarrow$
 
-$\lambda_s \sum_j P(\omega_j|x) \le \lambda_r + \lambda_s P(\omega_i) \Rightarrow$
+$\lambda_s \sum_j P(\omega_j|x) \le \lambda_r + \lambda_s P(\omega_i | x) \Rightarrow$
 
-$1 - \frac{\lambda_r}{\lambda_s} \le P(\omega_i)$
+$1 - \frac{\lambda_r}{\lambda_s} \le P(\omega_i | x)$
 
 ### (b) what happens if $\lambda_r=0$
 
@@ -139,11 +149,47 @@ $0 \le P(\omega_i)$
 
 This means that whatever the model predicts, the risk of reject is always larger than accept a category. So in all cases, the algorithm will not choose to reject.
 
-### Experiment
+## Problem 4
 
-Run the experiment:
+### (a)
 
-`python hw2.py`
+Problem 3 use $P(\omega_i|x)$ to decide the category and use $1 - \frac{\lambda_r}{\lambda_s} \le P(\omega_i | x)$ to decide rejection.
+
+In this problem, we have $g_i(x) = P(x|\omega_i)P(\omega_i) = P(x, \omega_i) = P(\omega_i | x) P(x)$.
+
+and $g_r(x) = (1 - \frac{\lambda_r}{\lambda_s})P(x)$.
+
+Divide all the functions with $P(x)$, we get $G_i(x) = \frac{g_i(x)}{P(x)} = P(\omega_i | x)$ and $G_c(x) = 1 - \frac{\lambda_r}{\lambda_s}$.
+
+This is consistent with the result of problem 3.
+
+### (b)
+
+![](fig/prob4.png)
+
+On left and right, the decision can be easily made, but in the middle region, the classifier refuse to make a decision.
+
+### (c)
+
+As $r = \frac{\lambda_r}{\lambda_s}$ increase from 0 to 1, the rejection line raises.
+
+When r is small, rejection does not appear, because the risk of rejection is too high.
+
+When r increases, then bewteen two classes there appears a rejection area.
+
+When r continues to increase, the risk of rejection is low enough to force all decision to become a rejection.
+
+In the following figure, the process is seen more clearly.
+
+|Total Decision Curve|Risk Curve|
+|:--|:--|
+|![](fig/prob4_total.png)|![](fig/prob4_risk.png)|
+
+### (d) repeat expr with different parameter
+
+![](fig/prob4_2.png)
+
+## Problem 5
 
 Set $\mu$ to be 1.5, the accuracy is about 70% ~ 80%, which varies greatly. To be specific, the accuracy of $\omega_1$ and $\omega_2$ are close to each other. In addition, the figure below shows the feature probability $P(x|\omega_1)$. Red and blue represent $\omega_1$, $\omega_2$ respectively.
 
@@ -152,8 +198,6 @@ Set $\mu$ to be 1.5, the accuracy is about 70% ~ 80%, which varies greatly. To b
 Set $\mu$ to be 3, the accuracy is 100%. The feature probability is also shown below.
 
 ![](fig/MinerrorSurface_3.png)
-
-## Problem 1
 
 ### (a)
 
@@ -220,7 +264,7 @@ Let the gaussian random vector to be $X$, and the original parameter to be $\mu$
 As $\Phi \Sigma \Phi^T = \Lambda$, so $\Phi \Lambda^{-\frac{1}{2}} \Sigma (\Lambda^{-\frac{1}{2}})^T \Phi^T = \Lambda^{-\frac{1}{2}} \Phi \Sigma \Phi^T (\Lambda^{-\frac{1}{2}})^T = I$.
 
 
-## Problem 2
+## Problem 6
 
 ### (a)
 
