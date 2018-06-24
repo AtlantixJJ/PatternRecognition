@@ -2,11 +2,11 @@
 
 2015011313 徐鉴劲 计54
 
-## Maximum Likelihood Estimate
+## Problem1
 
 问题描述：给定一个数据集进行无监督学习，确定一个产生数据的分布。类别数量是通过假设预先确定的。
 
-### 理论基础
+### Maximum Likelihood Estimation
 
 假设这个数据是由多个概率混合而成：$P(x) = \sum P(x|\omega_i)P(\omega_i)$。
 
@@ -335,11 +335,117 @@ $P(\Sigma) = \alpha'' \Pi_{ij} e^{-\frac{1}{2}\Sigma^{-1}_{ij}(X^T X - c c^T + \
 |1.89756|0.04821|
 |0.04821|1.80511|
 
-## 实验结果对比
+### 实验结果对比
 
 BE在大、小数据量上表现都不错，但是它是一个有监督的方法。
 
 MLE在大数据集上表现不错，在小数据集上误差较大，其优点在于是基本无监督的，只用设置一个类的数量，和KNN是类似的。
+
+## Problem 2: BE
+
+###  (a)
+
+$P(D|\theta) = P(x_1,...,x_n|\theta) = \Pi_i P(x_i|\theta)$
+
+=$\Pi_i \Pi_j \theta_i^{x_{ij}} (1 - \theta_i)^{1 - x_{ij}}$
+
+=$\Pi_i \theta_i^{\sum_j x_{ij}} (1 - \theta_i)^{\sum_j (1 - x_{ij})}$
+
+=$\Pi_i \theta_i^{s_i} (1 - \theta_i)^{n - s_j}$
+
+### (b)
+
+$P(\theta|D) = \frac{P(D|\theta)P(\theta)}{\int_0^1 P(D|\theta)P(\theta)d\theta}$
+
+因为$P(\theta)$是均匀分布，所以分母中的$\theta$可以提出来
+
+$P(\theta|D) = \frac{P(D|\theta)}{\int_0^1 P(D|\theta) d\theta}$
+
+=$\frac{\Pi_i \theta_i^{s_i} (1 - \theta_i)^{n - s_j}}{\int_0^1 \Pi_i \theta_i^{s_i} (1 - \theta_i)^{n - s_j}d\theta}$
+
+=$\Pi_i \frac{(n + 1)!}{s_i! (n-s_i)!} \theta_i^{s_i} (1 - \theta_i)^{n - s_j}$
+
+### (c)
+
+When n=1 and d=1, x = 0 or 1
+
+$P(\theta|D) = P(\theta|x)$ = $\frac{2}{x! (1-x)!} \theta^{x} (1 - \theta)^{1 - x}$
+
+=$2 \theta^{x} (1 - \theta)^{1 - x}$
+
+Thus, 
+
+$P(\theta|x=0) = 2 (1 - \theta)$
+
+$P(\theta|x=1) = 2 \theta$
+
+The figure below shows the distribution
+
+![](fig/prob2.png)
+
+### (d)
+
+$P(x|D)$ is the classification confidence.
+
+$P(x|D) = \int_0^1 P(x|\theta) P(\theta|D) d\theta$
+
+=$\int_0^1 \Pi_i \theta_i^{x_i} (1 - \theta_i) ^ {1 - x_i} \frac{(n + 1)!}{s_i! (n-s_i)!} \theta_i^{s_i} (1 - \theta_i)^{n - s_i} d\theta$
+
+=$\left [ \Pi_i \frac{(n + 1)!}{s_i! (n-s_i)!} \right ] \int_0^1 \Pi_i \theta_i^{x_i + s_i} (1 - \theta_i)^{1 + n - x_i - s_i} d\theta$
+
+As every $\theta_i$ is independent with each other, so the integration can be completely one by one
+
+=$\left [ \Pi_i \frac{(n + 1)!}{s_i! (n-s_i)!} \right ] \Pi_i \int_0^1 \theta_i^{x_i + s_i} (1 - \theta_i)^{1 + n - x_i - s_i} d\theta_i$
+
+=$\Pi_i \frac{(n + 1)!}{s_i! (n-s_i)!} \frac{(x_i + s_i)!(1 + n - x_i - s_i)!}{(n + 2)!}$
+
+=$\Pi_i [\frac{s_i + 1}{n+2}]^{x_i} [\frac{n+1-s_i}{n+2}]^{1 - x_i}$
+
+=$\Pi_i [\frac{s_i + 1}{n+2}]^{x_i} [1 - \frac{s_i + 1}{n+2}]^{1 - x_i}$
+
+### (e)
+
+If we view $P(x|D)$ as some distribution obtained by $P(x|\hat \theta)$, we can see from the formulae $\Pi_i [\frac{s_i + 1}{n+2}]^{x_i} [1 - \frac{s_i + 1}{n+2}]^{1 - x_i}$ that $\hat \theta = \frac{s_i + 1}{n+2}$. In this way $P(x|D) = \Pi_i \hat \theta_i^{x_i} (1 - \hat \theta_i) ^{1 - x_i}$.
+
+However if you use an empirical estimation that each class probability is its frequency statistics, then we should obtain $\theta_i = \frac{s_i}{n}$, which is different than the estimation of BE.
+
+## Problem 3: HMM
+
+### (a)
+
+Let transition matrix be $a_{ij} = P(x_{t+1} = j|x_t = i)$.
+
+Take the statistics of the training data:
+
+1. $\omega_1$
+
+|$P(x_{t+1} / x_t, \omega_1)$|$x_{t+1}=1$|$x_{t+1}=2$|$x_{t+1}=3$|$x_{t+1}=4$|
+|:--|:--|:--|:--|:--|
+|$x_t=1$|0.23529        |0.47059        |0.17647        |0.11765        |
+|$x_t=2$|0.25000        |0.20000        |0.40000        |0.15000        |
+|$x_t=3$|0.00000        |0.31250        |0.25000        |0.43750        |
+|$x_t=4$|0.00000        |0.11111        |0.22222        |0.66667        |
+
+2. $\omega_2$
+
+|$P(x_{t+1} / x_t, \omega_2)$|$x_{t+1}=1$|$x_{t+1}=2$|$x_{t+1}=3$|$x_{t+1}=4$|
+|:--|:--|:--|:--|:--|
+|$x_t=1$|0.57143        |0.21429        |0.07143        |0.14286        |
+|$x_t=2$|0.44444        |0.27778        |0.16667        |0.11111        |
+|$x_t=3$|0.21429        |0.35714        |0.14286        |0.28571        |
+|$x_t=4$|0.17391        |0.13043        |0.26087        |0.43478        |
+
+### (b)
+
+Let $s$ denote the sequence and $c_i$ be its i-th element. Use minimum error probability classification:
+
+If $P(s | \omega_1) \gt P(s | \omega_2)$ then decide $\omega_1$, otherwise decide $\omega_2$.
+
+$P(s | \omega) = P(x_1,...,x_n | \omega) = P(x_1=c_1) \Pi_{i=2} P(x_{i+1} = c_{i+1} | x_{i} = c_i, \omega)$.
+
+To avoid underflow, use log-probability:
+
+$J = -lnP(s | \omega) = \sum -ln P(x_{i+1} = c_{i+1} | x_{i} = c_i, \omega) - lnP(x_1=c_1)$
 
 ## 运行代码
 
