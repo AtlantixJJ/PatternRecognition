@@ -111,7 +111,7 @@ et = (1+t*t) / tf.reduce_sum(1+t*t)
 #### 训练loss图
 
 ![](fig/loss.png)
-·
+
 可以看到loss的下降并不是很平滑，这说明了MLE并不是凸优化，而且tf存在一定的数值不稳定
 
 #### 参数估计结果（a)
@@ -243,13 +243,25 @@ $p(\theta)$是一个先验假设，此处我们不知道任何情况，它是一
 
 其中M是参数的个数。因为参数的分布假设成一样的了。
 
-对于前一项：$\Pi_k \mathcal{N}(x_k; \mu, \Sigma) = \Pi_k \frac{1}{\sqrt{(2 \pi)^d |\Sigma|}} e^{-\frac{1}{2} (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)} = (\frac{1}{\sqrt{(2 \pi)^d |\Sigma|}})^N e^{-\frac{1}{2} \sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}$
+对于前一项：$\Pi_k \mathcal{N}(x_k; \mu, \Sigma)$
 
-我们需要化简指数项：$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_k x_k^T \Sigma^{-1} x_k - x_k^T \Sigma^{-1} \mu - \mu^T \Sigma^{-1} x_k + \mu^T \Sigma^{-1} \mu = \sum_k \left [ x_k^T \Sigma^{-1} x_k - 2 x_k^T \Sigma^{-1} \mu \right ] + N \mu^T \Sigma^{-1} \mu$
+=$\Pi_k \frac{1}{\sqrt{(2 \pi)^d |\Sigma|}} e^{-\frac{1}{2} (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}$
+
+=$(\frac{1}{\sqrt{(2 \pi)^d |\Sigma|}})^N e^{-\frac{1}{2} \sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}$
+
+我们需要化简指数项：$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)$
+
+=$\sum_k x_k^T \Sigma^{-1} x_k - x_k^T \Sigma^{-1} \mu - \mu^T \Sigma^{-1} x_k + \mu^T \Sigma^{-1} \mu$
+
+=$\sum_k \left [ x_k^T \Sigma^{-1} x_k - 2 x_k^T \Sigma^{-1} \mu \right ] + N \mu^T \Sigma^{-1} \mu$
 
 首先我们以$\mu$为主元进行整理：
 
-$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = N \mu^T \Sigma^{-1} \mu - 2(\sum_k x_k^T)\Sigma^{-1} \mu + \sum_k x_k^T \Sigma^{-1} x_k = (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k) - \frac{1}{N} (\sum_k x_k)^T \Sigma^{-1} \sum_k x_k + \sum_k x_k^T \Sigma^{-1} x_k$
+$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)$
+
+=$N \mu^T \Sigma^{-1} \mu - 2(\sum_k x_k^T)\Sigma^{-1} \mu + \sum_k x_k^T \Sigma^{-1} x_k$
+
+=$(\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k) - \frac{1}{N} (\sum_k x_k)^T \Sigma^{-1} \sum_k x_k + \sum_k x_k^T \Sigma^{-1} x_k$
 
 所以：
 
@@ -415,6 +427,8 @@ However if you use an empirical estimation that each class probability is its fr
 
 Let transition matrix be $a_{ij} = P(x_{t+1} = j|x_t = i)$.
 
+And suppose A, B, C, D = 1, 2, 3, 4.
+
 Take the statistics of the training data:
 
 1. $\omega_1$
@@ -426,6 +440,12 @@ Take the statistics of the training data:
 |$x_t=3$|0.00000        |0.31250        |0.25000        |0.43750        |
 |$x_t=4$|0.00000        |0.11111        |0.22222        |0.66667        |
 
+Prior:
+
+|1|2|3|4|
+|:--|:--|:--|:--|
+|0.14516        |0.29032        |0.27419        |0.29032        |
+
 2. $\omega_2$
 
 |$P(x_{t+1} / x_t, \omega_2)$|$x_{t+1}=1$|$x_{t+1}=2$|$x_{t+1}=3$|$x_{t+1}=4$|
@@ -434,6 +454,12 @@ Take the statistics of the training data:
 |$x_t=2$|0.44444        |0.27778        |0.16667        |0.11111        |
 |$x_t=3$|0.21429        |0.35714        |0.14286        |0.28571        |
 |$x_t=4$|0.17391        |0.13043        |0.26087        |0.43478        |
+
+Prior:
+
+|1|2|3|4|
+|:--|:--|:--|:--|
+|0.14516        |0.29032        |0.27419        |0.29032        |
 
 ### (b)
 
@@ -447,11 +473,69 @@ To avoid underflow, use log-probability:
 
 $J = -lnP(s | \omega) = \sum -ln P(x_{i+1} = c_{i+1} | x_{i} = c_i, \omega) - lnP(x_1=c_1)$
 
+Choose the smaller one.
+
+Classification result:
+
+|1: ABBBCDDD|2: DADBCBAA|3: CDCBABA|4: ADBBBCD|
+|:--------|:--------|:--------|:--------|
+|2        |1        |2        |1        |
+
+### (c)
+
+The classification process is plot as the figure below:
+
+|Probability of each product factor|Probability of prefix string|
+|:--|:--|
+|![](fig/prob3_1.png)|![](fig/prob3_2.png)|
+
+We can see that the same sequence will obtain different `step probability` at each step w.r.t. to different category.
+
+Note that changing prior will not affect other `step probabilities`, so change the prior will make the log probability shift up-and-down as a whole.
+
+Using original prior, we have:
+
+$J_1 = J_1 + lnP(x_0 = c_0 | \omega_1) - lnP(x_0 = c_0 | \omega_1) = \hat J_1 - lnP(x_0 = c_0 | \omega_1)$
+
+and
+
+$J_2 = J_2 + lnP(x_0 = c_0 | \omega_2) - lnP(x_0 = c_0 | \omega_2) = \hat J_2 - lnP(x_0 = c_0 | \omega_2)$
+
+subtract them:
+
+$\Delta = \hat J_1 - \hat J_2 + lnP(x_0 = c_0 | \omega_2) - lnP(x_0 = c_0 | \omega_1)$
+
+To make two category output the same log probility based on a different prior, we have:
+
+$\Delta' = \hat J_1 - \hat J_2 + ln P_2 - ln P_1 = 0$
+
+This leads to
+
+$ln P_1 - ln P_2 = -lnP(x_0 = c_0 | \omega_2) + lnP(x_0 = c_0 | \omega_1) + \Delta$
+
+As long as new prior $P_1$ and $P_2$ satisty this equation, the two category's probability will be the same.
+
+Suppose that category 1's prior remains the same, now we can get an exact solution of category 2's new prior.
+
+$P_2 = exp( lnP(x_0 = c_0 | \omega_1) + \Delta )$, in which $\Delta = J_1 - J_2$.
+
+Now the classification process looks like
+
+![](fig/prob3_3.png)
+
+From the figure we confirm that this two category have the same output probability.
+
 ## 运行代码
+
+第一题：
+
+python prob1.py
 
 有可能因为初始化太过极端，造成计算溢出（inf），此时重新运行一遍，问题一般就没有了。
 
-运行命令：
+其他题目：
 
-python hw3.py
-
+```
+python prob2.py
+python prob3.py
+```
