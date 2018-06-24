@@ -6,6 +6,10 @@
 
 问题描述：给定一个数据集进行无监督学习，确定一个产生数据的分布。类别数量是通过假设预先确定的。
 
+数据图(三类均等)
+
+![](fig/dataset_111.png)
+
 ### Maximum Likelihood Estimation
 
 假设这个数据是由多个概率混合而成：$P(x) = \sum P(x|\omega_i)P(\omega_i)$。
@@ -265,13 +269,25 @@ $\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)$
 
 所以：
 
-$P(\mu | \mathcal{D}) = \alpha' p(\theta) e^{-\frac{1}{2} (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k)} = \alpha' p(\theta) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1}) = \alpha' \mathcal{N}(\theta_i; M m_i, M s_i^2) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1}) = \alpha' \mathcal{N}(\frac{1}{N} \sum_k x_k, \frac{\Sigma}{N})$
+$P(\mu | \mathcal{D}) = \alpha' p(\theta) e^{-\frac{1}{2} (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k)}$
+
+=$\alpha' p(\theta) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1})$
+
+=$\alpha' \mathcal{N}(\theta_i; M m_i, M s_i^2) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1})$
+
+=$\alpha' \mathcal{N}(\frac{1}{N} \sum_k x_k, \frac{\Sigma}{N})$
 
 然后我们对$\Sigma$为主元进行整理。
 
 设$(\Sigma^{-1})_{ij} = b_{ij}$，同理设$(x_k)_i = x_{ki}$，再令$\sum_k x_k = c$
 
-$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_k \sum_j \sum_i (x_{ki} - \mu_i) b_{ij} (x_{kj} - \mu_j) = \sum_k \sum_j \sum_i b_{ij} (x_{ki}x_{kj} - x_{ki}\mu_j - x_{kj}\mu_i + \mu_i\mu_j) = \sum_{ij} b_{ij} ( \sum_k x_{ki}x_{kj} - c_i \mu_j - c_j \mu_i + N \mu_i\mu_j )$
+$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)$
+
+=$\sum_k \sum_j \sum_i (x_{ki} - \mu_i) b_{ij} (x_{kj} - \mu_j)$
+
+=$\sum_k \sum_j \sum_i b_{ij} (x_{ki}x_{kj} - x_{ki}\mu_j - x_{kj}\mu_i + \mu_i\mu_j)$
+
+=$\sum_{ij} b_{ij} ( \sum_k x_{ki}x_{kj} - c_i \mu_j - c_j \mu_i + N \mu_i\mu_j )$
 
 $\sum_k x_{ki}x_{kj} = (X^T X)_{ij}$,
 
@@ -281,7 +297,11 @@ $\mu_i \mu_j = (\mu \mu^T)_{ij}$
 
 所以：
 
-$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T )_{ij} = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T + c c^T - c c^T )_{ij} = \sum_{ij} \Sigma^{-1} \odot (X^T X - c c^T + \frac{1}{N}(N \mu - c)(N \mu - c)^T )_{ij}$
+$\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)$
+
+=$\sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T )_{ij} = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T + c c^T - c c^T )_{ij}$
+
+=$\sum_{ij} \Sigma^{-1} \odot (X^T X - c c^T + \frac{1}{N}(N \mu - c)(N \mu - c)^T )_{ij}$
 
 将$\sum_{ij}$从指数项目上拆解下来，可以化成:
 

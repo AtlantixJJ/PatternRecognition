@@ -782,6 +782,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>2015011313 徐鉴劲 计54</p>
 <h2 id="problem1">Problem1</h2>
 <p>问题描述：给定一个数据集进行无监督学习，确定一个产生数据的分布。类别数量是通过假设预先确定的。</p>
+<p>数据图(三类均等)</p>
+<div class="figure">
+<img src="fig/dataset_111.png" />
+
+</div>
 <h3 id="maximum-likelihood-estimation">Maximum Likelihood Estimation</h3>
 <p>假设这个数据是由多个概率混合而成：<span class="math inline">\(P(x) = \sum P(x|\omega_i)P(\omega_i)\)</span>。</p>
 <p>其中每一个概率假设为高斯分布：<span class="math inline">\(P(x|\omega_i) = \frac{1}{\sqrt{(2\pi)^d |\Sigma|}} e^{-\frac{1}{2} (x - \mu)^T \Sigma^{-1} (x - \mu)}\)</span>.</p>
@@ -1199,20 +1204,34 @@ et <span class="op">=</span> (<span class="dv">1</span><span class="op">+</span>
 <p><span class="math inline">\(p(\theta)\)</span>是一个先验假设，此处我们不知道任何情况，它是一个具有0均值和<span class="math inline">\(+oo\)</span>方差的正态分布函数，<span class="math inline">\(p(\theta_i) \sim \mathcal{N}(\theta_i; m_i, s_i^2)\)</span>，<span class="math inline">\(m_i=0\)</span>，<span class="math inline">\(s_i=+oo\)</span>。</p>
 <p>所以<span class="math inline">\(P(\theta | \mathcal{D}) = \left [ \alpha \Pi_k \mathcal{N}(x_k; \mu, \Sigma) \right ] \left [ \Pi_i \mathcal{N}(\theta_i; m_i, s_i^2) \right ] = \left [ \alpha \Pi_k \mathcal{N}(x_k; \mu, \Sigma) \right ] \left [ \mathcal{N}(\theta_i; M m_i, M s_i^2) \right ]\)</span>.</p>
 <p>其中M是参数的个数。因为参数的分布假设成一样的了。</p>
-<p>对于前一项：<span class="math inline">\(\Pi_k \mathcal{N}(x_k; \mu, \Sigma)\)</span>= <span class="math inline">\(\Pi_k \frac{1}{\sqrt{(2 \pi)^d |\Sigma|}} e^{-\frac{1}{2} (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}\)</span>= <span class="math inline">\((\frac{1}{\sqrt{(2 \pi)^d |\Sigma|}})^N e^{-\frac{1}{2} \sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}\)</span></p>
-<p>我们需要化简指数项：<span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_k x_k^T \Sigma^{-1} x_k - x_k^T \Sigma^{-1} \mu - \mu^T \Sigma^{-1} x_k + \mu^T \Sigma^{-1} \mu = \sum_k \left [ x_k^T \Sigma^{-1} x_k - 2 x_k^T \Sigma^{-1} \mu \right ] + N \mu^T \Sigma^{-1} \mu\)</span></p>
+<p>对于前一项：<span class="math inline">\(\Pi_k \mathcal{N}(x_k; \mu, \Sigma)\)</span></p>
+<p>=<span class="math inline">\(\Pi_k \frac{1}{\sqrt{(2 \pi)^d |\Sigma|}} e^{-\frac{1}{2} (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}\)</span></p>
+<p>=<span class="math inline">\((\frac{1}{\sqrt{(2 \pi)^d |\Sigma|}})^N e^{-\frac{1}{2} \sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)}\)</span></p>
+<p>我们需要化简指数项：<span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)\)</span></p>
+<p>=<span class="math inline">\(\sum_k x_k^T \Sigma^{-1} x_k - x_k^T \Sigma^{-1} \mu - \mu^T \Sigma^{-1} x_k + \mu^T \Sigma^{-1} \mu\)</span></p>
+<p>=<span class="math inline">\(\sum_k \left [ x_k^T \Sigma^{-1} x_k - 2 x_k^T \Sigma^{-1} \mu \right ] + N \mu^T \Sigma^{-1} \mu\)</span></p>
 <p>首先我们以<span class="math inline">\(\mu\)</span>为主元进行整理：</p>
-<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = N \mu^T \Sigma^{-1} \mu - 2(\sum_k x_k^T)\Sigma^{-1} \mu + \sum_k x_k^T \Sigma^{-1} x_k = (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k) - \frac{1}{N} (\sum_k x_k)^T \Sigma^{-1} \sum_k x_k + \sum_k x_k^T \Sigma^{-1} x_k\)</span></p>
+<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)\)</span></p>
+<p>=<span class="math inline">\(N \mu^T \Sigma^{-1} \mu - 2(\sum_k x_k^T)\Sigma^{-1} \mu + \sum_k x_k^T \Sigma^{-1} x_k\)</span></p>
+<p>=<span class="math inline">\((\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k) - \frac{1}{N} (\sum_k x_k)^T \Sigma^{-1} \sum_k x_k + \sum_k x_k^T \Sigma^{-1} x_k\)</span></p>
 <p>所以：</p>
-<p><span class="math inline">\(P(\mu | \mathcal{D}) = \alpha&#39; p(\theta) e^{-\frac{1}{2} (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k)} = \alpha&#39; p(\theta) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1}) = \alpha&#39; \mathcal{N}(\theta_i; M m_i, M s_i^2) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1}) = \alpha&#39; \mathcal{N}(\frac{1}{N} \sum_k x_k, \frac{\Sigma}{N})\)</span></p>
+<p><span class="math inline">\(P(\mu | \mathcal{D}) = \alpha&#39; p(\theta) e^{-\frac{1}{2} (\mu - \frac{1}{N} \sum_k x_k)^T N\Sigma^{-1} (\mu - \frac{1}{N} \sum_k x_k)}\)</span></p>
+<p>=<span class="math inline">\(\alpha&#39; p(\theta) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1})\)</span></p>
+<p>=<span class="math inline">\(\alpha&#39; \mathcal{N}(\theta_i; M m_i, M s_i^2) \mathcal{N}(\frac{1}{N} \sum_k x_k, N\Sigma^{-1})\)</span></p>
+<p>=<span class="math inline">\(\alpha&#39; \mathcal{N}(\frac{1}{N} \sum_k x_k, \frac{\Sigma}{N})\)</span></p>
 <p>然后我们对<span class="math inline">\(\Sigma\)</span>为主元进行整理。</p>
 <p>设<span class="math inline">\((\Sigma^{-1})_{ij} = b_{ij}\)</span>，同理设<span class="math inline">\((x_k)_i = x_{ki}\)</span>，再令<span class="math inline">\(\sum_k x_k = c\)</span></p>
-<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_k \sum_j \sum_i (x_{ki} - \mu_i) b_{ij} (x_{kj} - \mu_j) = \sum_k \sum_j \sum_i b_{ij} (x_{ki}x_{kj} - x_{ki}\mu_j - x_{kj}\mu_i + \mu_i\mu_j) = \sum_{ij} b_{ij} ( \sum_k x_{ki}x_{kj} - c_i \mu_j - c_j \mu_i + N \mu_i\mu_j )\)</span></p>
+<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)\)</span></p>
+<p>=<span class="math inline">\(\sum_k \sum_j \sum_i (x_{ki} - \mu_i) b_{ij} (x_{kj} - \mu_j)\)</span></p>
+<p>=<span class="math inline">\(\sum_k \sum_j \sum_i b_{ij} (x_{ki}x_{kj} - x_{ki}\mu_j - x_{kj}\mu_i + \mu_i\mu_j)\)</span></p>
+<p>=<span class="math inline">\(\sum_{ij} b_{ij} ( \sum_k x_{ki}x_{kj} - c_i \mu_j - c_j \mu_i + N \mu_i\mu_j )\)</span></p>
 <p><span class="math inline">\(\sum_k x_{ki}x_{kj} = (X^T X)_{ij}\)</span>,</p>
 <p><span class="math inline">\(c_i \mu_j = (c\mu^T)_{ij}\)</span>, <span class="math inline">\(c_j \mu_i = (c\mu^T)_{ji}\)</span>,</p>
 <p><span class="math inline">\(\mu_i \mu_j = (\mu \mu^T)_{ij}\)</span></p>
 <p>所以：</p>
-<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu) = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T )_{ij} = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T + c c^T - c c^T )_{ij} = \sum_{ij} \Sigma^{-1} \odot (X^T X - c c^T + \frac{1}{N}(N \mu - c)(N \mu - c)^T )_{ij}\)</span></p>
+<p><span class="math inline">\(\sum_k (x_k - \mu)^T \Sigma^{-1} (x_k - \mu)\)</span></p>
+<p>=<span class="math inline">\(\sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T )_{ij} = \sum_{ij} b_{ij} (X^T X + N \mu\mu^T - c\mu^T - \mu c^T + c c^T - c c^T )_{ij}\)</span></p>
+<p>=<span class="math inline">\(\sum_{ij} \Sigma^{-1} \odot (X^T X - c c^T + \frac{1}{N}(N \mu - c)(N \mu - c)^T )_{ij}\)</span></p>
 <p>将<span class="math inline">\(\sum_{ij}\)</span>从指数项目上拆解下来，可以化成:</p>
 <p><span class="math inline">\(P(\Sigma) = \alpha&#39;&#39; \Pi_{ij} e^{-\frac{1}{2}\Sigma^{-1}_{ij}(X^T X - c c^T + \frac{1}{N}(N \mu - c)(N \mu - c)^T )_{ij}}\)</span></p>
 <h3 id="实验结果-1">实验结果</h3>
