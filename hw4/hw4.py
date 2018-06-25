@@ -45,26 +45,33 @@ def plot(data, name):
     plt.savefig(name+".png")
     plt.close()
 
-def repeat_expr(func, params, N):
+def repeat_expr(func, params, N, draw=True, name="expr"):
     result = []
+    loss_collect = []
     for i in range(N):
         data = generate_data(params, [1000, 600, 1600])
         label = np.array([0]*1000 + [1]*600 + [2]*1600)
         testdata = generate_data(params, [100, 100, 100])
         testlabel = np.array([0]*100 + [1]*100 + [2]*100)
 
-        knn, acc = func(data, label, testdata, testlabel)
+        losses, acc = func(data, label, testdata, testlabel)
 
+        loss_collect.append(losses)
         result.append(acc)
     
-    get_statis_result(result)
-
-    return result
+    if draw:
+        loss_collect = np.array(loss_collect).mean(axis=0)
+        plt.plot(loss_collect)
+        plt.savefig(name + "_loss.png")
+        plt.close()
+    
+    return get_statis_result(result)
 
 def get_statis_result(result):
     r = np.array(result) * 100
     std, mean = r.mean(), r.std()
     print("Mean: %.2f\tStd: %.2f" % (std, mean))
+    return mean, std
 
 def do_KNN(data, label, testdata, testlabel):
     knn = sklearn.neighbors.KNeighborsClassifier()
@@ -78,16 +85,17 @@ def do_KNN(data, label, testdata, testlabel):
 x = tf.placeholder(tf.float32, [None, 3])
 y_true = tf.placeholder(tf.int32, [None,])
 
-
-
 sess = tf.InteractiveSession()
 
 def train(fetch, feed, N=1000):
     sess.run(tf.global_variables_initializer())
+    losses = []
     for i in range(N):
         loss_, _ = sess.run(fetch, feed)
+        losses.append(loss_)
         if i % 100 == 0:
             print("%04d %.4f" % (i, loss_))
+    return np.array(losses)
 
 def linear_classify(data, label, testdata, testlabel):
     # linear model
@@ -107,18 +115,23 @@ def linear_classify(data, label, testdata, testlabel):
         x: testdata,
         y_true: testlabel
     }
-    train([loss_linear, train_op_linear], feed_train)
+
+    losses = train([loss_linear, train_op_linear], feed_train)
 
     predict = sess.run([y_pred], feed_test)[0]
     count = (predict == testlabel).sum()
     acc = float(count) / float(testlabel.shape[0])
-    return y_pred, acc
+    return losses, acc
 
 def quad_classify(data, label, testdata, testlabel):
     # quad model
     w2 = tf.Variable(np.random.uniform(size=(3, 3)), dtype=tf.float32)
-    w3 = tf.Variable(np.random.uniform(size=(3, 3)), dtype=tf.float32)
+    w3 = tf.Variable(np.random.uniform(size=(3, 3, 3)), dtype=tf.float32)
     b2 = tf.Variable(np.zeros((3,)), dtype=tf.float32)
+
+    print(w3.shape)
+    print(tf.matmul(x, w3).get_shape())
+    # x: (N, 3); (N, 3) + (N, 3)
     y_quad = tf.matmul(x, w2) + tf.reduce_sum(tf.matmul(x, w3) * x, axis=1, keep_dims=True) + b2
     y_pred = tf.argmax(y_quad, axis=1)
     loss_quad = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y_quad, labels=y_true))
@@ -133,24 +146,24 @@ def quad_classify(data, label, testdata, testlabel):
         x: testdata,
         y_true: testlabel
     }
-    train([loss_quad, train_op_quad], feed_train, 5000)
+    losses = train([loss_quad, train_op_quad], feed_train, 5000)
 
     predict = sess.run([y_pred], feed_test)[0]
     count = (predict == testlabel).sum()
     acc = float(count) / float(testlabel.shape[0])
-    return y_pred, acc
+    return losses, acc
 
 # get dataset
 params = default_data()
 
 # KNN
 print("KNN classification (5 repeats)")
-result = repeat_expr(do_KNN, params, 5)
+result1 = repeat_expr(do_KNN, params, 5, False)
 
 # linear discriminant
 print("Linear classification (5 repeats)")
-# result = repeat_expr(linear_classify, params, 5)
+result2 = repeat_expr(linear_classify, params, 5, True, "linear")
 
 # Quad discriminant
 print("Quadratic classification (5 repeats)")
-result = repeat_expr(quad_classify, params, 5)
+result3 = repeat_expr(quad_classify, params, 5, True, "Quad")
