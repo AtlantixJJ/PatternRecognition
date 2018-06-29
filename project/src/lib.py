@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 plt.plot(range(10))
 plt.close()
 
+import pandas as pd
 import numpy as np
 
 INST_TYPE = ["A1", "A3", "B2", "B3"]
@@ -13,7 +14,7 @@ TLEN = 40 # LEN of average time
 SLOPE_DENOTE_LEN = 40
 MEANPRICE = "meanPrice"+str(TLEN)
 SLOPEPRICE = "slopePrice"+str(SLOPE_DENOTE_LEN)
-CLASSIFICATION_METHOD = "maxdiff"
+CLASSIFICATION_METHOD = "slope"
 
 
 ### process ###
@@ -76,12 +77,12 @@ def get_mean_price(dic):
         except KeyError:
             #print(inst_type + " not exist")
             continue
-        
-        x = dic[inst_type]['bidPrice1']
-        m = np.zeros_like(x)
-        for i in range(x.shape[0]-TLEN):
-            m[i] = x[i:i+TLEN].mean()
-        dic[inst_type][MEANPRICE] = m
+
+        x = pd.DataFrame(dic[inst_type]['bidPrice1'])
+        #m = np.zeros_like(x)
+        #for i in range(x.shape[0]-TLEN):
+        #    m[i] = x[i:i+TLEN].mean()
+        dic[inst_type][MEANPRICE] = pd.rolling_mean(x, window=TLEN).as_matrix()
 
 def get_fit_slope(dic):
     """
@@ -106,7 +107,7 @@ def get_fit_slope(dic):
             if Y[i] < 1:
                 break
             y = Y[i:i+SLOPE_DENOTE_LEN]
-            k[i] = ((SLOPE_DENOTE_LEN * (x * y).sum() - sum_x * y.sum()) / div) * 10000.0 / Y[i]
+            k[i] = ((SLOPE_DENOTE_LEN * (x * y).sum() - sum_x * y.sum()) / div) * 5000.0 / Y[i]
 
         dic[inst_type][SLOPEPRICE] = k
 
