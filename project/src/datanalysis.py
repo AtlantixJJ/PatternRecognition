@@ -4,10 +4,41 @@ import matplotlib.pyplot as plt
 plt.plot(range(10))
 plt.close()
 
+import scipy.interpolate as interp
 import numpy as np
 import lib
 
 filename = "futuresData/0-20170704-day.log"
+
+def double_compare():
+    dic1 = lib.get_dataset("futuresData/0-20170704-day.log")
+    dic2 = lib.get_dataset("futuresData/1-20170704-day.log")
+
+    l = []
+    l.append(dic1['A1'][lib.MEANPRICE])
+    l.append(dic1['A3'][lib.MEANPRICE])
+    l.append(dic2['B2'][lib.MEANPRICE])
+    l.append(dic2['B3'][lib.MEANPRICE])
+
+    max_len = max([len(t) for t in l])
+    for i in range(len(l)):
+        if max_len == len(l[i]):
+            l[i] = np.array(l[i], dtype="float64")
+            continue
+
+        f = interp.interp1d(range(len(l[i])), l[i], 'linear')
+        step = float(len(l[i])) / max_len    
+        l[i] = np.array([f(step * t) for t in range(max_len - 1)], dtype="float64")
+    
+    for i in range(len(l)):
+        m = l[i][1000:5000].max()
+        print(m)
+        plt.plot(l[i][1000:5000] / m)
+    plt.legend(["A1", "A3", "B2", "B3"])
+    plt.savefig("a.png")
+    plt.close()
+
+    return l
 
 def analysis_diff_ask_bid(dic):
     diff_ask_bid = dic['A1']['askPrice1'] - dic['A1']['bidPrice1'] 
@@ -56,6 +87,8 @@ def print_contract(dic, contract_name='A1', st=0, ed=1000, printItems=["askPrice
 def get_figures(dic):
     lib.analysis_diff_ask_bid(dic)
     plot_contract(dic, st=5000, ed=6000)
+
+l = double_compare()
 
 raw_data = lib.read_text(filename)
 

@@ -5,4 +5,5 @@
 *.sh
 *.pyc
 *fig
+*.html
 *.zip

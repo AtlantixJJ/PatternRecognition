@@ -46,18 +46,21 @@ def plot(data, name):
     plt.close()
 
 def repeat_expr(func, params, N, draw=True, name="expr"):
-    result = []
+    acc_collect = []
     loss_collect = []
+    class_acc_collect = []
     for i in range(N):
+        print("Repeat: %d" % i)
         data = generate_data(params, [1000, 600, 1600])
         label = np.array([0]*1000 + [1]*600 + [2]*1600)
         testdata = generate_data(params, [100, 100, 100])
         testlabel = np.array([0]*100 + [1]*100 + [2]*100)
 
-        losses, acc = func(data, label, testdata, testlabel)
+        losses, acc, class_acc = func(data, label, testdata, testlabel)
 
         loss_collect.append(losses)
-        result.append(acc)
+        class_acc_collect.append(class_acc)
+        acc_collect.append(acc)
     
     if draw:
         loss_collect = np.array(loss_collect).mean(axis=0)
@@ -65,12 +68,17 @@ def repeat_expr(func, params, N, draw=True, name="expr"):
         plt.savefig(name + "_loss.png")
         plt.close()
     
-    return get_statis_result(result)
+    return get_statis_result(acc_collect, class_acc_collect)
 
-def get_statis_result(result):
-    r = np.array(result) * 100
-    std, mean = r.mean(), r.std()
-    print("Mean: %.2f\tStd: %.2f" % (std, mean))
+def get_statis_result(acc_collect, class_acc_collect):
+    cr = np.array(class_acc_collect) * 100
+    r = np.array(acc_collect) * 100
+    mean, std = r.mean(), r.std()
+    print("Total Mean: %.2f\tStd: %.2f" % (mean, std))
+    print("Class acc:")
+    mean, std = cr.mean(axis=0), cr.std(axis=0)
+    for i in range(3):
+        print("%d Mean: %.2f\tStd: %.2f" % (i, mean[i], std[i]))
     return mean, std
 
 def do_KNN(data, label, testdata, testlabel):
@@ -80,7 +88,14 @@ def do_KNN(data, label, testdata, testlabel):
     predict = knn.predict(testdata)
     count = (predict == testlabel).sum()
     acc = float(count) / float(testlabel.shape[0])
-    return knn, acc
+
+    class_acc = []
+    for i in range(3):
+        label_mask = (testlabel == i)
+        count = ((predict == testlabel) * label_mask).sum()
+        class_acc.append(float(count) / label_mask.sum())
+
+    return knn, acc, class_acc
 
 x = tf.placeholder(tf.float32, [None, 3])
 y_true = tf.placeholder(tf.int32, [None,])
@@ -93,8 +108,6 @@ def train(fetch, feed, N=1000):
     for i in range(N):
         loss_, _ = sess.run(fetch, feed)
         losses.append(loss_)
-        if i % 100 == 0:
-            print("%04d %.4f" % (i, loss_))
     return np.array(losses)
 
 def linear_classify(data, label, testdata, testlabel):
@@ -121,7 +134,14 @@ def linear_classify(data, label, testdata, testlabel):
     predict = sess.run([y_pred], feed_test)[0]
     count = (predict == testlabel).sum()
     acc = float(count) / float(testlabel.shape[0])
-    return losses, acc
+
+    class_acc = []
+    for i in range(3):
+        label_mask = (testlabel == i)
+        count = ((predict == testlabel) * label_mask).sum()
+        class_acc.append(float(count) / label_mask.sum())
+
+    return losses, acc, class_acc
 
 def quad_classify(data, label, testdata, testlabel):
     # quad model
@@ -129,10 +149,9 @@ def quad_classify(data, label, testdata, testlabel):
     w3 = tf.Variable(np.random.uniform(size=(3, 3, 3)), dtype=tf.float32)
     b2 = tf.Variable(np.zeros((3,)), dtype=tf.float32)
 
-    print(w3.shape)
-    print(tf.matmul(x, w3).get_shape())
-    # x: (N, 3); (N, 3) + (N, 3)
-    y_quad = tf.matmul(x, w2) + tf.reduce_sum(tf.matmul(x, w3) * x, axis=1, keep_dims=True) + b2
+    y_quad = tf.reduce_sum(tf.tensordot(x, w3, [[1], [0]]) * tf.reshape(x, [-1, 3, 1]), axis=[1])
+    y_quad += tf.matmul(x, w2) + b2
+    #y_quad[:, i] += tf.reduce_sum(tf.matmul(x, w3[i]) * x, axis=1, keep_dims=True)
     y_pred = tf.argmax(y_quad, axis=1)
     loss_quad = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y_quad, labels=y_true))
     train_op_quad = tf.train.AdamOptimizer().minimize(loss_quad, var_list=[w2, w3, b2])
@@ -151,10 +170,19 @@ def quad_classify(data, label, testdata, testlabel):
     predict = sess.run([y_pred], feed_test)[0]
     count = (predict == testlabel).sum()
     acc = float(count) / float(testlabel.shape[0])
-    return losses, acc
+
+    class_acc = []
+    for i in range(3):
+        label_mask = (testlabel == i)
+        count = ((predict == testlabel) * label_mask).sum()
+        class_acc.append(float(count) / label_mask.sum())
+
+    return losses, acc, class_acc
 
 # get dataset
 params = default_data()
+
+scatter3d(generate_data(params, [1000, 600, 1600]))
 
 # KNN
 print("KNN classification (5 repeats)")
