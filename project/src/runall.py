@@ -39,7 +39,7 @@ def testall(method):
     return result_dic, err_dic
 
 def summary_dic(resdic):
-    all_vals = np.array(resdic.values())
+    all_vals = np.array(list(resdic.values()))
 
     # summary up INST TYPE
     INST_TYPE = ["A1", "A3", "B2", "B3"]
@@ -82,10 +82,10 @@ def test_alg(dic, method):
     return acc, err
 
 def analyze_from_npz(fname):
-    result_dic, err_dic = np.load(fname)['arr_0'].tolist()
+    result_dic, err_dic = np.load(fname, encoding='latin1')['arr_0'].tolist()
     full_avg, inst_avg, day_avg = summary_dic(result_dic)
     full_err_avg, inst_err_avg, day_err_avg = summary_dic(err_dic)
-    return [result_dic, full_avg, inst_avg, day_avg, full_err_avg, inst_err_avg, day_err_avg]
+    return [result_dic, err_dic, full_avg, inst_avg, day_avg, full_err_avg, inst_err_avg, day_err_avg]
 
 if __name__ == "__main__":
     for method in ["SMOOTHLINEAR", "LINEAR", "LOGISTIC"]:
