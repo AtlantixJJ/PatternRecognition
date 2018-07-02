@@ -82,7 +82,7 @@ def get_mean_price(dic):
         #m = np.zeros_like(x)
         #for i in range(x.shape[0]-TLEN):
         #    m[i] = x[i:i+TLEN].mean()
-        dic[inst_type][MEANPRICE] = pd.rolling_mean(x, window=TLEN).as_matrix()
+        dic[inst_type][MEANPRICE] = x.rolling(window=TLEN, min_periods=1).mean().as_matrix()
 
 def get_fit_slope(dic):
     """
