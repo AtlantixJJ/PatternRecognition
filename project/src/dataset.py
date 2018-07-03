@@ -10,6 +10,7 @@ THRESHOLD1 = 0.05 #0.002
 THRESHOLD2 = 0.10 #0.004
 INPUT_LEN = 200
 OUTPUT_LEN = 40
+DEP_LEN = OUTPUT_LEN + INPUT_LEN + 1
 
 def get_class(div):
     """
@@ -111,13 +112,15 @@ class DataLoader(object):
         return self.ds2.get_data()
 
 class FuturesData(object):
-    def __init__(self, from_npz=False):
+    def __init__(self, debug=False, from_npz=False):
         self.data_dir = "futuresData"
+        self.debug = debug
 
         if from_npz:
             self.__load_npz()
         else:
             self.__read_data()
+
         self.__proc()
 
     def __len__(self):
@@ -164,8 +167,17 @@ class FuturesData(object):
         file_idx = idx // self.min_length
         # retry until find a proper end time
         tried = []
+        cnt = 0
         while True:
-            seq = []
+            cnt += 1
+            if cnt > 4:
+                # avoid rare error
+                print("Cannot find!")
+                idx = np.random.randint(self.min_length)
+                tried = []
+
+            train_seq = []
+            target_seq = []
             # the inst_type used to mark an end
             end_type = np.random.randint(0, 4)
             if end_type in tried:
@@ -174,23 +186,36 @@ class FuturesData(object):
                 tried.append(end_type)
 
             # use end inst type to find an ending at a timestamp
-            scaled_idx = int((self.length[end_type, file_idx] - INPUT_LEN - 1) / float(self.min_length) * idx)
+            scaled_idx = int((self.length[end_type, file_idx] - DEP_LEN) / float(self.min_length) * idx)
             barrier_time = self.all_data[end_type, file_idx].index[INPUT_LEN + scaled_idx]
             
             IS_FAILED = False
+            end_idxs = []
             # exam other inst type
             for inst_type in range(4):
                 # find the latest time before barrier
                 end_idx = self.all_data[inst_type, file_idx].index.get_loc(barrier_time, 'ffill')
-                if end_idx < INPUT_LEN:
+                end_idxs.append(end_idx)
+                if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= self.length[inst_type, file_idx]:
                     IS_FAILED = True
                     break
-                seq.append(self.all_data[inst_type, file_idx][end_idx-INPUT_LEN:end_idx].as_matrix())
-            
+                train_seq.append(self.all_data[inst_type, file_idx][end_idx-INPUT_LEN:end_idx].as_matrix())
+                target_seq.append(self.all_data[inst_type, file_idx][end_idx:end_idx+OUTPUT_LEN].as_matrix())
+
             # retry if failed
             if IS_FAILED:
                 continue
             else:
                 break
 
-        return np.array(seq)
+        # debug
+        if self.debug:
+            print("-----")
+            for inst_type in range(4):
+                if inst_type == end_type:
+                    print(str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]) + " *")
+                else:
+                    print(str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]))
+            print("-----")
+        
+        return np.array([train_seq, target_seq])
