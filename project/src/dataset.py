@@ -5,6 +5,28 @@ import tensorpack as tp
 
 SLOPE_DENOTE_LEN = 40
 TLEN = 40 # LEN of average time
+THRESHOLD1 = 0.05 #0.002
+THRESHOLD2 = 0.10 #0.004
+
+def get_class(div):
+    """
+    Classify classes of increase or decrease, by slope
+    """
+    ans = -1
+    MID = 0
+
+    if div > MID + THRESHOLD2:
+        ans = 5
+    elif div > MID + THRESHOLD1:
+        ans = 4
+    elif div > MID - THRESHOLD1:
+        ans = 3
+    elif div > MID - THRESHOLD2:
+        ans = 2
+    else:
+        ans = 1
+
+    return ans
 
 def get_fit_slope(mean_price):
     """
@@ -26,22 +48,64 @@ def get_fit_slope(mean_price):
 
     return k
 
+def label_slope(slope):
+    """
+    Give label to sequence
+    """
+    return np.array([get_class(slope[i]) for i in range(slope.shape[0]-TLEN)])
+
 def get_mean_price(bid_price):
     """
     Args:
     bid_price:  A dataframe
     """
 
-    mean_price = bid_price.rolling(window=40, min_periods=1).mean()
+    mean_price = bid_price.rolling(window=TLEN, min_periods=1).mean()
     return mean_price
 
-def read_all_data(data_dir):
-    files = os.listdir(data_dir)
-    files.sort()
+def get_inst_type(name):
+    INST_TYPE = ["A1", "A3", "B2", "B3"]
+    for i in range(len(INST_TYPE)):
+        if INST_TYPE[i] in name:
+            return i
+
+
+class RandomShuffler(tp.dataflow.RNGDataFlow):
+    def __init__(self, datasets):
+        if type(datasets) == list and len(datasets) == 1:
+            self.datasets = datasets[0]
+        else:
+            self.datasets = datasets
+
+    def get_data(self):
+        idxs = np.arange(len(self.files))
+        if self.shuffle:
+            self.rng.shuffle(idxs)
     
-    dfs = []
-    for f in files:
-        if "csv" in f:
-            print(f)
-            dfs.append(pd.read_csv(os.path.join(data_dir, f), index_col=0, parse_dates=True))
-    return dfs
+
+class FuturesData(object):
+    def __init__(self, data_dir, shuffle=True):
+        self.data_dir = data_dir
+        self.shuffle = shuffle
+    
+        self.__read_data()
+
+    def __read_data(self):
+        files = os.listdir(self.data_dir)
+        files.sort()
+        
+        self.all_data = [[], [], [], []]
+        for f in files:
+            if "csv" in f:
+                print(f)
+                df = pd.read_csv(os.path.join(self.data_dir, f), index_col=0, parse_dates=True)
+                type_id = get_inst_type(f)
+                df[u'meanPrice'] = get_mean_price(df[u'bidPrice1'])
+                self.all_data[type_id].append(df[u'meanPrice'])
+        
+        # generate sampling time
+
+    
+    def __getitem__(self, idx):
+        pass
+                
