@@ -48,7 +48,7 @@ def analysis_diff_ask_bid(dic):
             count += 1
             diff_ask = dic['A1']['askPrice1'][i] - dic['A1']['askPrice1'][i-1]
             diff_bid = dic['A1']['bidPrice1'][i] - dic['A1']['bidPrice1'][i-1]
-            print("%d %d = %d %d" % (diff_ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
+            print("%d %d = %d %d" % (diff_ ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
 
     print("%d %f" % (count, float(count) / diff_ask_bid.shape[0]))
     lib.plot(diff_ask_bid, "fig/A1_diff_askPrice1_bidPrice1")
