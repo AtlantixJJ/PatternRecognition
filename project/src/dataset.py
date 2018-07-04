@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorpack as tp
 
 SLOPE_DENOTE_LEN = 40
-TLEN = 40 # LEN of average time
+TLEN = 100 # LEN of average time
 THRESHOLD1 = 0.05 #0.002
 THRESHOLD2 = 0.10 #0.004
 INPUT_LEN = 200
@@ -84,27 +84,25 @@ class RandomShuffler(tp.dataflow.RNGDataFlow):
         return self.len
 
     def get_data(self):
-        #tp.logger.info("Dataset size %d" % self.len)
         idxs = np.arange(self.len)
         if self.shuffle:
             self.rng.shuffle(idxs)
-        
-        for idx in idxs:
+        for i, idx in enumerate(idxs):
             yield [d[idx] for d in self.datasets]
 
 class DataLoader(object):
-    def __init__(self, dataset, batch_size, shuffle=True, num_threads=2):
+    def __init__(self, datasets, batch_size, shuffle=True, num_threads=2):
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.dataflow = RandomShuffler(dataset, self.shuffle)
+        self.dataflow = RandomShuffler(datasets, self.shuffle)
         self.num_threads = num_threads
     
-        self.ds1 = tp.dataflow.BatchData(self.dataflow, self.batch_size)
-        self.ds2 = tp.dataflow.PrefetchData(self.ds1, nr_prefetch=4, nr_proc=self.num_threads)
+        self.ds1 = tp.dataflow.BatchData(self.dataflow, self.batch_size, use_list=True)
+        self.ds2 = tp.dataflow.MultiProcessMapDataZMQ(self.ds1, nr_prefetch=1, nr_proc=self.num_threads)
         self.ds2.reset_state()
 
     def reset_state(self):
-        tp.logger.info("Reset dataloader")
+        #tp.logger.info("Reset dataloader")
         self.dataflow.reset_state()
         self.ds1.reset_state()
         self.ds2.reset_state()
@@ -130,9 +128,9 @@ class FuturesData(object):
 
     def __len__(self):
         if self.is_train:
-            return self.train_min_length
+            return self.train_number
         else:
-            return self.test_min_length
+            return self.test_number
 
     def __save_npz(self):
         #np.savez("futuresData", [self.all_data, self.earliest_time, self.length])
@@ -165,8 +163,10 @@ class FuturesData(object):
                 if df_len < 1000:
                     continue
                 type_id = get_inst_type(f)
-                df[u'meanPrice'] = get_mean_price(df[u'bidPrice1'])
-                self.all_data[type_id].append(df[u'meanPrice'])
+                x = get_mean_price(df[u'bidPrice1'])
+                x = x[~x.index.duplicated(keep='first')]
+                self.all_data[type_id].append(x)
+                self.all_data[type_id][-1].sort_index(inplace=True)
                 self.earliest_time[type_id].append(pd.Timestamp(df.index[INPUT_LEN+1]))
                 self.length[type_id].append(df_len)
         
@@ -213,47 +213,57 @@ class FuturesData(object):
         """
         self.train_file_number = self.train_all_data.shape[1]
         self.train_min_length = self.train_length.min() - DEP_LEN
-        self.train_idx = np.arange(self.train_min_length * self.train_file_number)
+        self.train_number = self.train_min_length * self.train_file_number
 
         self.test_file_number = self.test_all_data.shape[1]
         self.test_min_length = self.test_length.min() - DEP_LEN
-        self.test_idx = np.arange(self.test_min_length * self.test_file_number)
+        self.test_number = self.test_min_length * self.test_file_number
 
     def __getitem__(self, idx):
         if self.is_train:
+            number          = self.train_number
             min_length      = self.train_min_length
             length          = self.train_length
             file_number     = self.train_file_number
             all_data        = self.train_all_data
         else:
+            number          = self.test_number
             min_length      = self.test_min_length
             length          = self.test_length
             file_number     = self.test_file_number
             all_data        = self.test_all_data
 
         file_idx = idx // min_length
+        idx = idx % min_length
+    
         # retry until find a proper end time
         tried = []
-        cnt = 0
         while True:
-            cnt += 1
-            if cnt > 4:
+            if len(tried) == 4:
                 # avoid rare error
-                print("Cannot find!")
-                idx = np.random.randint(min_length)
+                tp.logger.info("Cannot find!")
+                idx = np.random.randint(number)
                 tried = []
+
+                file_idx = idx // min_length
+                idx = idx % min_length
 
             train_seq = []
             target_seq = []
             # the inst_type used to mark an end
-            end_type = np.random.randint(0, 4)
-            if end_type in tried:
-                continue
-            else:
-                tried.append(end_type)
+            
+            while True:
+                end_type = np.random.randint(0, 4)
+                if end_type not in tried:
+                    break
+                
+            tried.append(end_type)
+            
+            if idx >= min_length:
+                tp.logger.info("Fatal error: %d %d " % (idx, min_length))
 
             # use end inst type to find an ending at a timestamp
-            scaled_idx = int((length[end_type, file_idx] - DEP_LEN) / float(min_length) * idx)
+            scaled_idx = int((length[end_type, file_idx] - DEP_LEN) * idx / float(min_length))
             barrier_time = all_data[end_type, file_idx].index[INPUT_LEN + scaled_idx]
             
             IS_FAILED = False
@@ -261,19 +271,25 @@ class FuturesData(object):
             # exam other inst type
             for inst_type in range(4):
                 # find the latest time before barrier
-                end_idx = all_data[inst_type, file_idx].index.get_loc(barrier_time, 'ffill')
+                end_idx = all_data[inst_type, file_idx].index.get_loc(str(barrier_time), 'ffill')
+                try:
+                    end_idx = int(end_idx)
+                except TypeError:
+                    print(end_idx)
+                    end_idx = end_idx.start
                 end_idxs.append(end_idx)
                 if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= length[inst_type, file_idx]:
                     IS_FAILED = True
                     break
-                train_seq.append(all_data[inst_type, file_idx][end_idx-INPUT_LEN:end_idx].as_matrix())
-                target_seq.append(all_data[inst_type, file_idx][end_idx:end_idx+OUTPUT_LEN].as_matrix())
 
             # retry if failed
             if IS_FAILED:
                 continue
-            else:
-                break
+
+            for i, end_idx in enumerate(end_idxs):
+                train_seq.append(all_data[i, file_idx].values[end_idx-INPUT_LEN:end_idx])
+                target_seq.append(all_data[i, file_idx].values[end_idx:end_idx+OUTPUT_LEN])
+            break
 
         # debug
         if self.debug:

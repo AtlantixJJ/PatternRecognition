@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorpack as tp
+from os.path import join as pj
 
 INST_TYPE = lib.INST_TYPE
 INPUT_LEN = dataset.INPUT_LEN
@@ -122,6 +123,8 @@ def test_combine(name="combine"):
     summary = tf.summary.merge(inst_summary)
     summary_writer = tf.summary.FileWriter("logs/" + name)
 
+    saver = tf.train.Saver()
+
     # init
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -139,6 +142,9 @@ def test_combine(name="combine"):
                 sum_, _ = sess.run([summary, optim], {x: train_seq, y: label_seq, lr: LR})
                 summary_writer.add_summary(sum_, global_iter)
                 global_iter += 1
+        
+            save_path = saver.save(sess, pj("model", name + ".ckpt"))
+            print("Model saved in %s" % save_path)
 
 def test_single(is_linear=True, name="single"):
     tp.logger.info("Test linear")
@@ -165,7 +171,7 @@ def test_single(is_linear=True, name="single"):
                 est_y = linear(x)
             else:
                 est_y = mlp_single(x)
-
+            saver = tf.train.Saver()
             regression_loss = tf.reduce_mean(tf.abs(est_y - y))
             optim = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss)
             sess.run(tf.global_variables_initializer())
@@ -190,8 +196,15 @@ def test_single(is_linear=True, name="single"):
                                         })
                     summary_writer.add_summary(sum_, global_iter)
                     global_iter += 1
+            
+                save_path = saver.save(sess, pj("model", name + "_" + str(inst_type) + ".ckpt"))
+                print("Model saved in %s" % save_path)
 
 if __name__ == "__main__":
-    test_single(True, "single_linear")
-    test_single(True, "single_mlp")
-    test_combine("combine_mlp")
+    #saver.restore(sess, "/tmp/model.ckpt")
+    if sys.argv[1] == "1":
+        test_single(True, "single_linear")
+    elif sys.argv[1] == "2":
+        test_single(False, "single_mlp")
+    elif sys.argv[1] == "3":
+        test_combine("combine_mlp")

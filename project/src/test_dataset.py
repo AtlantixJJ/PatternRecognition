@@ -13,4 +13,4 @@ BATCH_SIZE = 64
 N_EPOCH = 100
 EPSILON = 1e-6
 
-d = dataset.FuturesData(from_npz=True)
+d = dataset.FuturesData(from_npz=False)

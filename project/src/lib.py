@@ -8,13 +8,13 @@ import pandas as pd
 import numpy as np
 
 INST_TYPE = ["A1", "A3", "B2", "B3"]
-THRESHOLD1 = 0.001 #0.005 #0.001
-THRESHOLD2 = 0.002 #0.02 #0.002
+THRESHOLD1 = 0.005 #0.001
+THRESHOLD2 = 0.02 #0.002
 TLEN = 100 # LEN of average time
 SLOPE_DENOTE_LEN = 40
 MEANPRICE = "meanPrice"+str(TLEN)
 SLOPEPRICE = "slopePrice"+str(SLOPE_DENOTE_LEN)
-CLASSIFICATION_METHOD = "maxdiff"
+CLASSIFICATION_METHOD = "slope"
 
 
 ### process ###
