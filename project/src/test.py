@@ -10,8 +10,8 @@ INST_TYPE = lib.INST_TYPE
 INPUT_LEN = dataset.INPUT_LEN
 OUTPUT_LEN = dataset.OUTPUT_LEN
 BATCH_SIZE = 64
-N_EPOCH = 100
-STAIRCASE = 20
+N_EPOCH = 80
+STAIRCASE = 15
 EPSILON = 1e-6
 
 #DATA_DIR = "futuresData"
@@ -169,7 +169,7 @@ def test_single(is_linear=True, name="single"):
             regression_loss = tf.reduce_mean(tf.abs(est_y - y))
             optim = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss)
             sess.run(tf.global_variables_initializer())
-            
+
             inst_summary = tf.summary.scalar("regression/inst%s" % INST_TYPE[inst_type], regression_loss)
 
             for epoch_id in range(N_EPOCH):

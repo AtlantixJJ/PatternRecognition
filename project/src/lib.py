@@ -8,13 +8,13 @@ import pandas as pd
 import numpy as np
 
 INST_TYPE = ["A1", "A3", "B2", "B3"]
-THRESHOLD1 = 0.05 #0.002
-THRESHOLD2 = 0.10 #0.004
-TLEN = 40 # LEN of average time
+THRESHOLD1 = 0.001 #0.005 #0.001
+THRESHOLD2 = 0.002 #0.02 #0.002
+TLEN = 100 # LEN of average time
 SLOPE_DENOTE_LEN = 40
 MEANPRICE = "meanPrice"+str(TLEN)
 SLOPEPRICE = "slopePrice"+str(SLOPE_DENOTE_LEN)
-CLASSIFICATION_METHOD = "slope"
+CLASSIFICATION_METHOD = "maxdiff"
 
 
 ### process ###
@@ -79,10 +79,15 @@ def get_mean_price(dic):
             continue
 
         x = pd.DataFrame(dic[inst_type]['bidPrice1'])
-        #m = np.zeros_like(x)
-        #for i in range(x.shape[0]-TLEN):
-        #    m[i] = x[i:i+TLEN].mean()
-        dic[inst_type][MEANPRICE] = x.rolling(window=TLEN, min_periods=1).mean().as_matrix()
+        m = np.zeros_like(x)
+        m[:TLEN] = x[:TLEN]
+        m[-TLEN:] = x[-TLEN:]
+        for i in range(TLEN//2, x.shape[0]-TLEN//2):
+            m[i] = x[i-TLEN//2:i+TLEN//2].mean()
+        dic[inst_type][MEANPRICE] = m
+        #dic[inst_type][MEANPRICE] = x.rolling(window=TLEN, min_periods=1, center=True).mean().as_matrix()[:, 0]
+        print(dic[inst_type][MEANPRICE].shape)
+        print(dic[inst_type][MEANPRICE][:10])
 
 def get_fit_slope(dic):
     """
@@ -101,13 +106,14 @@ def get_fit_slope(dic):
             #print(inst_type + " not exist")
             continue
         
-        Y = dic[inst_type][MEANPRICE]
+        center = dic[inst_type][MEANPRICE][:, 0]
+        Y = dic[inst_type][MEANPRICE][:, 0]#dic[inst_type]['bidPrice1']
         k = np.zeros_like(Y, dtype="float32")
         for i in range(Y.shape[0]-SLOPE_DENOTE_LEN):
             if Y[i] < 1:
                 break
             y = Y[i:i+SLOPE_DENOTE_LEN]
-            k[i] = ((SLOPE_DENOTE_LEN * (x * y).sum() - sum_x * y.sum()) / div) * 5000.0 / Y[i]
+            k[i] = (SLOPE_DENOTE_LEN * (x * y).sum() - sum_x * y.sum()) / div / 5000.0
 
         dic[inst_type][SLOPEPRICE] = k
 
@@ -147,9 +153,9 @@ def denote_dataset_maxdiff(dic):
 
         x = dic[inst_type]['bidPrice1']
         label = np.zeros_like(x, dtype="uint8")
-        for i in range(x.shape[0]-TLEN):
+        for i in range(x.shape[0]-SLOPE_DENOTE_LEN):
             cur = x[i]
-            maxi, mini = x[i:i+TLEN].max(), x[i:i+TLEN].min()
+            maxi, mini = x[i:i+SLOPE_DENOTE_LEN].max(), x[i:i+SLOPE_DENOTE_LEN].min()
             pd = float(maxi - cur) / cur
             nd = float(cur - mini ) / cur
             label[i] = get_class_maxdiff(pd, nd)
@@ -162,7 +168,10 @@ def denote_dataset_maxdiff(dic):
 def show_label(dic, contract_name="A1", st=0, ed=1000):
     colors = ['blue', 'cyan', 'grey', 'salmon', 'red']
     arr = dic[contract_name]["label"][st:ed]
-    c = [colors[x-1] for x in arr]
+    try:
+        c = [colors[x-1] for x in arr]
+    except TypeError:
+        c = [colors[x[0]-1] for x in arr] 
     plt.scatter(range(st, ed), dic[contract_name]['bidPrice1'][st:ed], s=1, c=c)
     #plt.plot(range(st, ed), dic[contract_name][MEANPRICE][st:ed], c="r")
     plt.savefig("fig/" + contract_name + "label.png")

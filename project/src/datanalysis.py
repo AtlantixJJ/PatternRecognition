@@ -3,16 +3,16 @@ matplotlib.use("agg")
 import matplotlib.pyplot as plt
 plt.plot(range(10))
 plt.close()
-
+from os.path import join as pj
 import scipy.interpolate as interp
 import numpy as np
 import lib
 
-filename = "futuresData/0-20170704-day.log"
+filename = pj("futuresData", "0-20170704-day.log")
 
 def double_compare():
-    dic1 = lib.get_dataset("futuresData/0-20170704-day.log")
-    dic2 = lib.get_dataset("futuresData/1-20170704-day.log")
+    dic1 = lib.get_dataset(pj("futuresData", "0-20170704-day.log"))
+    dic2 = lib.get_dataset(pj("futuresData", "1-20170704-day.log"))
 
     l = []
     l.append(dic1['A1'][lib.MEANPRICE])
@@ -26,7 +26,10 @@ def double_compare():
             l[i] = np.array(l[i], dtype="float64")
             continue
 
-        f = interp.interp1d(range(len(l[i])), l[i], 'linear')
+        y = np.array(l[i])[:, 0]
+        x = np.arange(y.shape[0])
+
+        f = interp.interp1d(x, y, 'linear')
         step = float(len(l[i])) / max_len    
         l[i] = np.array([f(step * t) for t in range(max_len - 1)], dtype="float64")
     
@@ -48,10 +51,10 @@ def analysis_diff_ask_bid(dic):
             count += 1
             diff_ask = dic['A1']['askPrice1'][i] - dic['A1']['askPrice1'][i-1]
             diff_bid = dic['A1']['bidPrice1'][i] - dic['A1']['bidPrice1'][i-1]
-            print("%d %d = %d %d" % (diff_ ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
+            print("%d %d = %d %d" % (diff_ask_bid[i-1], diff_ask_bid[i], diff_ask, diff_bid))
 
     print("%d %f" % (count, float(count) / diff_ask_bid.shape[0]))
-    lib.plot(diff_ask_bid, "fig/A1_diff_askPrice1_bidPrice1")
+    lib.plot(diff_ask_bid, pj("fig", "A1_diff_askPrice1_bidPrice1"))
 
 def plot_contract(dic, contract_name="A1", st=0, ed=1000):
     for k, v in dic[contract_name].items():
@@ -67,15 +70,19 @@ def plot_compare(dic, contract_name=["A1", "A3", "B2", "B3"], st=0, ed=1000, com
             print(cname + " not exist")
             continue
 
+        fig, ax1 = plt.subplots()
+
         for i, k in enumerate(comp):
             c = colors[i]
             name = name + "_" + k
             if ifNorm and k.find("slope") == -1:
                 x = dic[cname][k][st:ed].astype("float32")
-                plt.plot(range(st, ed), (x-x.min())/(x.max()-x.min()), c)
+                ax1.plot(range(st, ed), x, c)
                 #plt.plot(x, c)
             else:
-                plt.plot(range(st, ed), dic[cname][k][st:ed], c)
+                ax2 = ax1.twinx()
+                #ax2.set_ylim([-0.003, 0.003])
+                ax2.plot(range(st, ed), dic[cname][k][st:ed], c+".", markersize=1)
         
         plt.savefig("fig/" + name + "_" + str(st) + "_" + str(ed) + ".png")
         plt.close()
@@ -88,7 +95,7 @@ def get_figures(dic):
     lib.analysis_diff_ask_bid(dic)
     plot_contract(dic, st=5000, ed=6000)
 
-l = double_compare()
+#l = double_compare()
 
 raw_data = lib.read_text(filename)
 
