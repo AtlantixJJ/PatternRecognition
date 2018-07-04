@@ -10,7 +10,8 @@ INST_TYPE = lib.INST_TYPE
 INPUT_LEN = dataset.INPUT_LEN
 OUTPUT_LEN = dataset.OUTPUT_LEN
 BATCH_SIZE = 64
-N_EPOCH = 50
+N_EPOCH = 100
+STAIRCASE = 20
 EPSILON = 1e-6
 
 #DATA_DIR = "futuresData"
@@ -126,7 +127,7 @@ def test_combine(name="combine"):
         sess.run(tf.global_variables_initializer())
         global_iter = 0
         for epoch_id in range(N_EPOCH):
-            LR = 0.1 ** (N_EPOCH // 10)
+            LR = 0.1 ** (N_EPOCH // STAIRCASE)
 
             train_dl.reset_state()
             for idx, sample in enumerate(train_dl.generator()):
@@ -157,7 +158,6 @@ def test_single(is_linear=True, name="single"):
 
     # init
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
         for inst_type in range(4):
             global_iter = 0
 
@@ -168,11 +168,12 @@ def test_single(is_linear=True, name="single"):
 
             regression_loss = tf.reduce_mean(tf.abs(est_y - y))
             optim = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss)
-
+            sess.run(tf.global_variables_initializer())
+            
             inst_summary = tf.summary.scalar("regression/inst%s" % INST_TYPE[inst_type], regression_loss)
 
             for epoch_id in range(N_EPOCH):
-                LR = 0.1 ** (N_EPOCH // 10)
+                LR = 0.1 ** (N_EPOCH // STAIRCASE)
 
                 train_dl.reset_state()
                 for idx, sample in enumerate(train_dl.generator()):

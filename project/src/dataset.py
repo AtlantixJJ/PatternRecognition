@@ -84,6 +84,7 @@ class RandomShuffler(tp.dataflow.RNGDataFlow):
         return self.len
 
     def get_data(self):
+        #tp.logger.info("Dataset size %d" % self.len)
         idxs = np.arange(self.len)
         if self.shuffle:
             self.rng.shuffle(idxs)
@@ -99,7 +100,7 @@ class DataLoader(object):
         self.num_threads = num_threads
     
         self.ds1 = tp.dataflow.BatchData(self.dataflow, self.batch_size)
-        self.ds2 = tp.dataflow.PrefetchData(self.ds1, nr_prefetch=32, nr_proc=self.num_threads)
+        self.ds2 = tp.dataflow.PrefetchData(self.ds1, nr_prefetch=4, nr_proc=self.num_threads)
         self.ds2.reset_state()
 
     def reset_state(self):
@@ -223,13 +224,11 @@ class FuturesData(object):
             min_length      = self.train_min_length
             length          = self.train_length
             file_number     = self.train_file_number
-            idx             = self.train_idx
             all_data        = self.train_all_data
         else:
             min_length      = self.test_min_length
             length          = self.test_length
             file_number     = self.test_file_number
-            idx             = self.test_idx
             all_data        = self.test_all_data
 
         file_idx = idx // min_length
