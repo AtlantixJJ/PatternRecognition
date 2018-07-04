@@ -8,14 +8,15 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import tensorpack as tp
 from os.path import join as pj
+import tqdm, pprint
 
 TLEN = dataset.TLEN
 INST_TYPE = lib.INST_TYPE
 INPUT_LEN = dataset.INPUT_LEN
 OUTPUT_LEN = dataset.OUTPUT_LEN
-BATCH_SIZE = 256
+BATCH_SIZE = 64
 N_EPOCH = 50
-NUM_WORKER = 16
+NUM_WORKER = 32
 STAIRCASE = 10
 EPSILON = 1e-6
 
@@ -172,14 +173,16 @@ def test_combine(name="combine"):
     saver = tf.train.Saver()
 
     # init
-    with tf.Session() as sess:
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         global_iter = 0
         for epoch_id in range(N_EPOCH):
             LR = 0.1 ** (N_EPOCH // STAIRCASE)
             
             train_dl.dataset.is_train = True
-            for idx, sample in enumerate(train_dl):
+            for sample in tqdm.tqdm(train_dl):
                 train_seq = sample['seq'].numpy()
                 target_seq = sample['target'].numpy()
 
@@ -274,6 +277,7 @@ def test_single(is_linear=True, name="single"):
             est_y = linear(x)
         else:
             est_y = mlp_single(x)
+        
         saver = tf.train.Saver()
         regression_loss = tf.reduce_mean(tf.abs(est_y - y))
         optim = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss)
@@ -286,7 +290,7 @@ def test_single(is_linear=True, name="single"):
             LR = 0.1 ** (N_EPOCH // STAIRCASE)
             
             train_dl.dataset.is_train = True
-            for idx, sample in enumerate(train_dl):
+            for sample in tqdm.tqdm(train_dl):
                 train_seq = sample['seq'].numpy()
                 target_seq = sample['target'].numpy()
                 sum_, _ = sess.run([inst_summary, optim],
@@ -306,7 +310,7 @@ def test_single(is_linear=True, name="single"):
             tp.logger.info("Validation")
             #val_dl.reset_state()
             val_dl.dataset.is_train = False
-            for idx, sample in enumerate(val_dl):
+            for sample in tqdm.tqdm(val_dl):
                 train_seq = sample['seq'].numpy()
                 target_seq = sample['target'].numpy()
                 label_seq = sample['label'].numpy()
@@ -360,11 +364,154 @@ def test_single(is_linear=True, name="single"):
         for inst_type in range(4):
             run(inst_type)
 
+def run_all_model():
+    tp.logger.info("Test all ")
+    futures_dataset = dataset.FuturesData(is_train=True, from_npz=True)
+
+    # build dataset
+    train_dl = DataLoader(futures_dataset, BATCH_SIZE, num_workers=NUM_WORKER)
+    val_dl = DataLoader(futures_dataset, BATCH_SIZE, num_workers=NUM_WORKER, shuffle=False)
+
+    # control
+    lr = tf.placeholder(tf.float32, [], "lr")
+
+    #x_inst = [tf.placeholder(tf.float32, [None, INPUT_LEN], name="x_%d"%i) for i in range(4)]
+    #y_inst = [tf.placeholder(tf.float32, [None, OUTPUT_LEN], name="x_%d"%i) for i in range(4)]
+    x = tf.placeholder(tf.float32, [None, 4, INPUT_LEN], name="x")
+    y = tf.placeholder(tf.float32, [None, 4, OUTPUT_LEN], name="x")
+
+    # get prediction
+    with tf.variable_scope("combine"):
+        est_combine_y = mlp_combine(x)
+        combine_var = [v for v in tf.trainable_variables() if "combine" in v.name]
+    est_linear_y = []
+    est_mlp_y = []
+    for i in range(4):
+        with tf.variable_scope("inst%s"%INST_TYPE[i]):
+            with tf.variable_scope("linear"):
+                est_linear_y.append(linear(x[:, i]))
+            with tf.variable_scope("mlp"):
+                est_mlp_y.append(mlp_single(x[:, i]))
+    
+    # get loss
+    regression_loss_combine_inst = tf.reduce_mean(tf.abs(est_combine_y - y), axis=[0, 2])
+    regression_loss_combine = tf.reduce_mean(regression_loss_combine_inst)
+    combine_optim = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss_combine, var_list=combine_var)
+    tp.logger.info("Combine MLP variables:")
+    pprint.pprint(combine_var)
+
+    # get training loss
+    regression_loss_linear_inst = []
+    linear_optim_inst = []
+    linear_var = []
+    regression_loss_mlp_inst = []
+    mlp_optim_inst = []
+    mlp_var = []
+    for i in range(4):
+        regression_loss_linear_inst.append(tf.reduce_mean(tf.abs(est_linear_y[i] - y[:, i])))
+        regression_loss_mlp_inst.append(tf.reduce_mean(tf.abs(est_mlp_y[i] - y[:, i])))
+
+        linear_var.append([v for v in tf.trainable_variables() if "linear" in v.name and "inst%s"%INST_TYPE[i] in v.name])
+        mlp_var.append([v for v in tf.trainable_variables() if "mlp" in v.name and "inst%s"%INST_TYPE[i] in v.name])
+
+        linear_optim_inst.append(tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss_linear_inst[i], var_list=linear_var[i]))
+        mlp_optim_inst.append(tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(regression_loss_mlp_inst[i], var_list=mlp_var[i]))
+        tp.logger.info("linear variables (%s):" % INST_TYPE[i])
+        pprint.pprint(linear_var[i])
+        tp.logger.info("Single MLP variables (%s):" % INST_TYPE[i])
+        pprint.pprint(mlp_var[i])
+    train_optim_collections = [combine_optim] + linear_optim_inst + mlp_optim_inst
+
+    # get training summary
+    summary_writers = []
+    summary_writers.append(tf.summary.FileWriter("logs/combine_mlp"))
+    summary_writers.append(tf.summary.FileWriter("logs/linear_mlp"))
+    summary_writers.append(tf.summary.FileWriter("logs/single_mlp"))
+
+    inst_summary_combine = []
+    inst_summary_linear  = []
+    inst_summary_mlp     = []
+    with tf.variable_scope("regression", reuse=True):
+        for inst_type in range(4):
+            inst_summary_combine.append(tf.summary.scalar(
+                "/train/inst%s" % INST_TYPE[inst_type],
+                regression_loss_combine_inst[inst_type]))
+            inst_summary_linear.append(tf.summary.scalar(
+                "/train/inst%s" % INST_TYPE[inst_type],
+                regression_loss_linear_inst[inst_type]))
+            inst_summary_mlp.append(tf.summary.scalar(
+                "/train/inst%s" % INST_TYPE[inst_type],
+                regression_loss_mlp_inst[inst_type]))
+    inst_summary_combine = tf.summary.merge(inst_summary_combine )
+    inst_summary_linear  = tf.summary.merge(inst_summary_linear  )
+    inst_summary_mlp     = tf.summary.merge(inst_summary_mlp     )
+    train_summary_collections = [inst_summary_combine, inst_summary_linear, inst_summary_mlp]
+
+    saver = tf.train.Saver()
+
+    # init
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        sess.run(tf.global_variables_initializer())
+        global_iter = 0
+        for epoch_id in range(N_EPOCH):
+            LR = 0.1 ** (N_EPOCH // STAIRCASE)
+            
+            train_dl.dataset.is_train = True
+            for sample in tqdm.tqdm(train_dl):
+                train_seq = sample['seq'].numpy()
+                target_seq = sample['target'].numpy()
+
+                result = sess.run(train_summary_collections + train_optim_collections, {x: train_seq, y: target_seq, lr: LR})
+                for sum_id in range(3):
+                    summary_writers[sum_id].add_summary(result[sum_id], global_iter)
+                    tf.reset_default_graph()
+                    summary_writers[sum_id].close()
+                for sum_id in range(3):
+                    summary_writers[sum_id].reopen()
+                global_iter += 1
+
+            # four inst type loss together
+            tot_reg_loss = [0.0, 0.0, 0.0]
+            gt_label = []
+            est_label = []
+            sample_cnt = 0
+
+            tp.logger.info("Validation")
+            #val_dl.reset_state()
+            val_dl.dataset.is_train = False
+            for idx, sample in enumerate(val_dl):
+                train_seq = sample['seq'].numpy()
+                target_seq = sample['target'].numpy()
+                label_seq = sample['label'].numpy()
+
+                reg_loss_int, pred = sess.run([regression_loss_inst, est_y],
+                                    {
+                                        x: train_seq,
+                                        y: target_seq
+                                    })
+                
+                # get class
+                for i in range(pred.shape[0]):
+                    local = []
+                    for inst_type in range(4):
+                        k = (OUTPUT_LEN * (tmp_x * pred[i, inst_type]).sum() - sum_tmp_x * pred[i, inst_type].sum()) / tmp_div / 5000.0
+                        local.append(lib.get_class(k))
+                    est_label.append(local)
+                gt_label.append(label_seq)
+                
+                # record an average
+                tot_reg_loss += reg_loss_int * train_seq.shape[0] / float(BATCH_SIZE)
+
+                sample_cnt += 1
+
+            save_path = saver.save(sess, pj("model", "all_model.ckpt"))
+            print("Model saved in %s" % save_path)
+
 if __name__ == "__main__":
-    #saver.restore(sess, "/tmp/model.ckpt")
-    #if sys.argv[1] == "1":
-    #test_single(True, "single_linear")
-    #elif sys.argv[1] == "2":
+    test_combine("combine_mlp")
+    test_single(True, "single_linear")
     test_single(False, "single_mlp")
-    #elif sys.argv[1] == "3":
-    #test_combine("combine_mlp")
+    #run_all_model()
+    

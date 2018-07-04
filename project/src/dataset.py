@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import tensorpack as tp
 
+SEED = 1391959233
 THRESHOLD1 = 0.005 #0.001
 THRESHOLD2 = 0.02 #0.002
 TLEN = 100 # LEN of average time
@@ -202,10 +203,16 @@ class FuturesData(object):
         self.train_file_number = self.train_all_data.shape[1]
         self.train_min_length = self.train_length.min() - DEP_LEN
         self.train_number = self.train_min_length * self.train_file_number
+        self.train_idx    = np.arange(self.train_number)
+
+        self.rng = np.random.RandomState(SEED)
+        self.rng.shuffle(self.train_idx)
 
         self.test_file_number = self.test_all_data.shape[1]
         self.test_min_length = self.test_length.min() - DEP_LEN
         self.test_number = self.test_min_length * self.test_file_number
+        
+        
 
     def __getitem__(self, idx):
         if self.is_train:
@@ -221,9 +228,10 @@ class FuturesData(object):
             file_number     = self.test_file_number
             all_data        = self.test_all_data
 
+        if self.is_train:
+            idx = self.train_idx[idx]
         file_idx = idx // min_length
         idx = idx % min_length
-    
         # retry until find a proper end time
         tried = []
         while True:
@@ -232,7 +240,8 @@ class FuturesData(object):
                 tp.logger.info("Cannot find!")
                 idx = np.random.randint(number)
                 tried = []
-
+                if self.is_train:
+                    idx = self.train_idx[idx]
                 file_idx = idx // min_length
                 idx = idx % min_length
 
@@ -245,7 +254,7 @@ class FuturesData(object):
                 end_type = np.random.randint(0, 4)
                 if end_type not in tried:
                     break
-                
+            
             tried.append(end_type)
             
             if idx >= min_length:
@@ -264,7 +273,6 @@ class FuturesData(object):
                 try:
                     end_idx = int(end_idx)
                 except TypeError:
-                    print(end_idx)
                     end_idx = end_idx.start
                 end_idxs.append(end_idx)
                 if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= length[inst_type, file_idx]:
