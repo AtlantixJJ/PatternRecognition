@@ -112,28 +112,45 @@ class DataLoader(object):
         return self.ds2.get_data()
 
 class FuturesData(object):
-    def __init__(self, debug=False, from_npz=False):
+    def __init__(self, is_train=True, debug=False, from_npz=True):
         self.data_dir = "futuresData"
         self.debug = debug
+        self.is_train = is_train
+
+        self.train_val_splitor = pd.Timestamp(year=2017, month=8, day=10)
 
         if from_npz:
             self.__load_npz()
         else:
             self.__read_data()
+            self.__save_npz()
 
         self.__proc()
 
     def __len__(self):
-        return self.min_length
+        if self.is_train:
+            return self.train_min_length
+        else:
+            return self.test_min_length
 
     def __save_npz(self):
-        np.savez("futuresData", [self.all_data, self.earliest_time, self.length])
+        #np.savez("futuresData", [self.all_data, self.earliest_time, self.length])
+        np.savez("futures_train_val",
+            [self.train_all_data, self.train_earliest_time, self.train_length],
+            [self.test_all_data, self.test_earliest_time,   self.test_length])
 
     def __load_npz(self):
-        npz = np.load("futuresData.npz")['arr_0']
-        self.all_data, self.earliest_time, self.length = npz
+        print("Load from futures_train_val.npz")
+        res = np.load("futures_train_val.npz")
+        self.train_all_data, self.train_earliest_time, self.train_length = res['arr_0']
+        self.test_all_data, self.test_earliest_time,   self.test_length  = res['arr_1']
+        #self.all_data, self.earliest_time, self.length = npz
+        print("Done")
 
     def __read_data(self):
+        """
+        Read data and divide 
+        """
         files = os.listdir(self.data_dir)
         files.sort()
         
@@ -149,22 +166,73 @@ class FuturesData(object):
                 type_id = get_inst_type(f)
                 df[u'meanPrice'] = get_mean_price(df[u'bidPrice1'])
                 self.all_data[type_id].append(df[u'meanPrice'])
-                self.earliest_time[type_id].append(df[df.columns[0]][INPUT_LEN+1])
+                self.earliest_time[type_id].append(pd.Timestamp(df.index[INPUT_LEN+1]))
                 self.length[type_id].append(df_len)
         
         self.all_data = np.array(self.all_data)
         self.earliest_time = np.array(self.earliest_time)
         self.length = np.array(self.length)
-    
-    def __proc(self):
+
         self.file_number = self.all_data.shape[1]
         
         # generate sampling time
         self.min_length = self.length.min() - TLEN - 1
         self.idx = np.arange(self.min_length * self.file_number)
 
+        # divide train/test split
+        self.train_all_data = [[], [], [], []]
+        self.train_earliest_time = [[], [], [], []]
+        self.train_length = [[], [], [], []]
+
+        self.test_all_data = [[], [], [], []]
+        self.test_earliest_time = [[], [], [], []]
+        self.test_length = [[], [], [], []]
+
+        for inst_type in range(4):
+            for i in range(self.all_data.shape[1]):
+                if self.earliest_time[inst_type, i] < self.train_val_splitor:
+                    self.train_all_data[inst_type].append(self.all_data[inst_type, i])
+                    self.train_earliest_time[inst_type].append(self.earliest_time[inst_type, i])
+                    self.train_length[inst_type].append(self.length[inst_type, i])
+                else:
+                    self.test_all_data[inst_type].append(self.all_data[inst_type, i])
+                    self.test_earliest_time[inst_type].append(self.earliest_time[inst_type, i])
+                    self.test_length[inst_type].append(self.length[inst_type, i])
+
+        self.train_all_data         = np.array(self.train_all_data         )
+        self.train_earliest_time    = np.array(self.train_earliest_time    )
+        self.train_length           = np.array(self.train_length           )
+        self.test_all_data          = np.array(self.test_all_data          )
+        self.test_earliest_time     = np.array(self.test_earliest_time     )
+        self.test_length            = np.array(self.test_length            )
+
+    def __proc(self):
+        """
+        Collect some extra information
+        """
+        self.train_file_number = self.train_all_data.shape[1]
+        self.train_min_length = self.train_length.min() - DEP_LEN
+        self.train_idx = np.arange(self.train_min_length * self.train_file_number)
+
+        self.test_file_number = self.test_all_data.shape[1]
+        self.test_min_length = self.test_length.min() - DEP_LEN
+        self.test_idx = np.arange(self.test_min_length * self.test_file_number)
+
     def __getitem__(self, idx):
-        file_idx = idx // self.min_length
+        if self.is_train:
+            min_length      = self.train_min_length
+            length          = self.train_length
+            file_number     = self.train_file_number
+            idx             = self.train_idx
+            all_data        = self.train_all_data
+        else:
+            min_length      = self.test_min_length
+            length          = self.test_length
+            file_number     = self.test_file_number
+            idx             = self.test_idx
+            all_data        = self.test_all_data
+
+        file_idx = idx // min_length
         # retry until find a proper end time
         tried = []
         cnt = 0
@@ -173,7 +241,7 @@ class FuturesData(object):
             if cnt > 4:
                 # avoid rare error
                 print("Cannot find!")
-                idx = np.random.randint(self.min_length)
+                idx = np.random.randint(min_length)
                 tried = []
 
             train_seq = []
@@ -186,21 +254,21 @@ class FuturesData(object):
                 tried.append(end_type)
 
             # use end inst type to find an ending at a timestamp
-            scaled_idx = int((self.length[end_type, file_idx] - DEP_LEN) / float(self.min_length) * idx)
-            barrier_time = self.all_data[end_type, file_idx].index[INPUT_LEN + scaled_idx]
+            scaled_idx = int((length[end_type, file_idx] - DEP_LEN) / float(min_length) * idx)
+            barrier_time = all_data[end_type, file_idx].index[INPUT_LEN + scaled_idx]
             
             IS_FAILED = False
             end_idxs = []
             # exam other inst type
             for inst_type in range(4):
                 # find the latest time before barrier
-                end_idx = self.all_data[inst_type, file_idx].index.get_loc(barrier_time, 'ffill')
+                end_idx = all_data[inst_type, file_idx].index.get_loc(barrier_time, 'ffill')
                 end_idxs.append(end_idx)
-                if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= self.length[inst_type, file_idx]:
+                if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= length[inst_type, file_idx]:
                     IS_FAILED = True
                     break
-                train_seq.append(self.all_data[inst_type, file_idx][end_idx-INPUT_LEN:end_idx].as_matrix())
-                target_seq.append(self.all_data[inst_type, file_idx][end_idx:end_idx+OUTPUT_LEN].as_matrix())
+                train_seq.append(all_data[inst_type, file_idx][end_idx-INPUT_LEN:end_idx].as_matrix())
+                target_seq.append(all_data[inst_type, file_idx][end_idx:end_idx+OUTPUT_LEN].as_matrix())
 
             # retry if failed
             if IS_FAILED:
@@ -213,9 +281,9 @@ class FuturesData(object):
             print("-----")
             for inst_type in range(4):
                 if inst_type == end_type:
-                    print(str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]) + " *")
+                    print(str(all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]) + " *")
                 else:
-                    print(str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(self.all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]))
+                    print(str(all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]))
             print("-----")
         
         return np.array([train_seq, target_seq])
