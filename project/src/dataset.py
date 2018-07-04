@@ -4,13 +4,19 @@ import numpy as np
 import tensorflow as tf
 import tensorpack as tp
 
-SLOPE_DENOTE_LEN = 40
+THRESHOLD1 = 0.005 #0.001
+THRESHOLD2 = 0.02 #0.002
 TLEN = 100 # LEN of average time
-THRESHOLD1 = 0.05 #0.002
-THRESHOLD2 = 0.10 #0.004
+SLOPE_DENOTE_LEN = 40
 INPUT_LEN = 200
 OUTPUT_LEN = 40
 DEP_LEN = OUTPUT_LEN + INPUT_LEN + 1
+
+tmp_x = np.array(range(0, SLOPE_DENOTE_LEN))
+tmp_x2 = tmp_x ** 2
+sum_tmp_x = tmp_x.sum()
+sum_tmp_x2 = tmp_x2.sum()
+tmp_div = SLOPE_DENOTE_LEN * sum_tmp_x2 - sum_tmp_x ** 2
 
 def get_class(div):
     """
@@ -64,7 +70,9 @@ def get_mean_price(bid_price):
     bid_price:  A dataframe
     """
 
-    mean_price = bid_price.rolling(window=TLEN, min_periods=1).mean()
+    mean_price = bid_price.copy(True)
+    for i in range(TLEN//2, mean_price.shape[0]-TLEN//2):
+        mean_price[i] = bid_price[i-TLEN//2:i+TLEN//2].mean()
     return mean_price
 
 def get_inst_type(name):
@@ -89,26 +97,6 @@ class RandomShuffler(tp.dataflow.RNGDataFlow):
             self.rng.shuffle(idxs)
         for i, idx in enumerate(idxs):
             yield [d[idx] for d in self.datasets]
-
-class DataLoader(object):
-    def __init__(self, datasets, batch_size, shuffle=True, num_threads=2):
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.dataflow = RandomShuffler(datasets, self.shuffle)
-        self.num_threads = num_threads
-    
-        self.ds1 = tp.dataflow.BatchData(self.dataflow, self.batch_size, use_list=True)
-        self.ds2 = tp.dataflow.MultiProcessMapDataZMQ(self.ds1, nr_prefetch=1, nr_proc=self.num_threads)
-        self.ds2.reset_state()
-
-    def reset_state(self):
-        #tp.logger.info("Reset dataloader")
-        self.dataflow.reset_state()
-        self.ds1.reset_state()
-        self.ds2.reset_state()
-
-    def generator(self):
-        return self.ds2.get_data()
 
 class FuturesData(object):
     def __init__(self, is_train=True, debug=False, from_npz=True):
@@ -250,6 +238,7 @@ class FuturesData(object):
 
             train_seq = []
             target_seq = []
+            k = []
             # the inst_type used to mark an end
             
             while True:
@@ -289,6 +278,8 @@ class FuturesData(object):
             for i, end_idx in enumerate(end_idxs):
                 train_seq.append(all_data[i, file_idx].values[end_idx-INPUT_LEN:end_idx])
                 target_seq.append(all_data[i, file_idx].values[end_idx:end_idx+OUTPUT_LEN])
+                slope = (OUTPUT_LEN * (tmp_x * target_seq[i]).sum() - sum_tmp_x * target_seq[i].sum()) / tmp_div / 5000.0
+                k.append(get_class(slope))
             break
 
         # debug
@@ -301,4 +292,28 @@ class FuturesData(object):
                     print(str(all_data[inst_type, file_idx].index[end_idxs[inst_type] - INPUT_LEN]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type]]) + " " + str(all_data[inst_type, file_idx].index[end_idxs[inst_type] + OUTPUT_LEN]))
             print("-----")
         
-        return np.array([train_seq, target_seq])
+        return {'seq': np.array(train_seq),
+                'target': np.array(target_seq),
+                'label' : np.array(k)}
+
+### Fucking deprecated ###
+
+class DataLoader(object):
+    def __init__(self, datasets, batch_size, shuffle=True, num_threads=2):
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.dataflow = RandomShuffler(datasets, self.shuffle)
+        self.num_threads = num_threads
+    
+        self.ds1 = tp.dataflow.BatchData(self.dataflow, self.batch_size, use_list=True)
+        self.ds2 = tp.dataflow.MultiProcessMapDataZMQ(self.ds1, nr_prefetch=1, nr_proc=self.num_threads)
+        self.ds2.reset_state()
+
+    def reset_state(self):
+        #tp.logger.info("Reset dataloader")
+        self.dataflow.reset_state()
+        self.ds1.reset_state()
+        self.ds2.reset_state()
+
+    def generator(self):
+        return self.ds2.get_data()
