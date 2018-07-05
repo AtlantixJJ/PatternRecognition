@@ -1,0 +1,92 @@
+Combine MLP:
+
+((96306,), (96306,))
+Recall:0.70824,Precision:0.39455
+Recall:0.53344,Precision:0.53937
+Recall:0.46866,Precision:0.58154
+Recall:0.54822,Precision:0.55262
+Recall:0.73550,Precision:0.44939
+Precision:0.53396
+((96306,), (96306,))
+Recall:0.76175,Precision:0.38504
+Recall:0.66030,Precision:0.60361
+Recall:0.61891,Precision:0.75216
+Recall:0.67965,Precision:0.61871
+Recall:0.75892,Precision:0.44357
+Precision:0.64980
+((96306,), (96306,))
+Recall:0.81824,Precision:0.67995
+Recall:0.27393,Precision:0.34918
+Recall:0.25452,Precision:0.29434
+Recall:0.29232,Precision:0.35324
+Recall:0.79059,Precision:0.70701
+Precision:0.55342
+((96306,), (96306,))
+Recall:0.81273,Precision:0.70155
+Recall:0.23414,Precision:0.29051
+Recall:0.19127,Precision:0.23892
+Recall:0.23590,Precision:0.29645
+Recall:0.80057,Precision:0.74244
+Precision:0.59104
+
+Single Linear:
+
+((96306,), (96306,))
+Recall:0.69591,Precision:0.35795
+Recall:0.50400,Precision:0.50879
+Recall:0.45104,Precision:0.57865
+Recall:0.52257,Precision:0.53220
+Recall:0.75289,Precision:0.37968
+Precision:0.50977
+((96306,), (96306,))
+Recall:0.76804,Precision:0.34101
+Recall:0.64446,Precision:0.58051
+Recall:0.60804,Precision:0.74965
+Recall:0.65638,Precision:0.60372
+Recall:0.75741,Precision:0.37802
+Precision:0.63437
+((96306,), (96306,))
+Recall:0.76847,Precision:0.63027
+Recall:0.25104,Precision:0.31968
+Recall:0.22857,Precision:0.25697
+Recall:0.25742,Precision:0.31171
+Recall:0.73772,Precision:0.67717
+Precision:0.51570
+((96306,), (96306,))
+Recall:0.78350,Precision:0.69578
+Recall:0.21979,Precision:0.27532
+Recall:0.17235,Precision:0.20891
+Recall:0.22443,Precision:0.27804
+Recall:0.78815,Precision:0.71981
+Precision:0.57497
+
+Single MLP:
+
+((96306,), (96306,))
+Recall:0.73075,Precision:0.43018
+Recall:0.54490,Precision:0.55169
+Recall:0.47740,Precision:0.59246
+Recall:0.55828,Precision:0.56384
+Recall:0.78440,Precision:0.45600
+Precision:0.54694
+((96306,), (96306,))
+Recall:0.78326,Precision:0.33942
+Recall:0.67660,Precision:0.61107
+Recall:0.61842,Precision:0.77386
+Recall:0.68604,Precision:0.61675
+Recall:0.79588,Precision:0.39750
+Precision:0.65495
+((96306,), (96306,))
+Recall:0.77044,Precision:0.59660
+Recall:0.23973,Precision:0.33077
+Recall:0.22451,Precision:0.28334
+Recall:0.24889,Precision:0.31841
+Recall:0.74885,Precision:0.62338
+Precision:0.49389
+((96306,), (96306,))
+Recall:0.81367,Precision:0.71961
+Recall:0.23987,Precision:0.29976
+Recall:0.20105,Precision:0.25249
+Recall:0.24090,Precision:0.30552
+Recall:0.81730,Precision:0.73540
+Precision:0.59841

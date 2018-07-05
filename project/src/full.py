@@ -204,7 +204,7 @@ def test_combine(name="combine"):
             tp.logger.info("Validation")
             #val_dl.reset_state()
             val_dl.dataset.is_train = False
-            for idx, sample in enumerate(val_dl):
+            for sample in tqdm.tqdm(val_dl):
                 train_seq = sample['seq'].numpy()
                 target_seq = sample['target'].numpy()
                 label_seq = sample['label'].numpy()
@@ -660,7 +660,7 @@ def run_single_model(is_linear, name):
                     ])
                 summary_writer.add_summary(summary, epoch_id)
 
-            save_path = saver.save(sess, pj("model", "all_model.ckpt"))
+            save_path = saver.save(sess, pj("model", name + "_model.ckpt"))
             print("Model saved in %s" % save_path)
 
 
