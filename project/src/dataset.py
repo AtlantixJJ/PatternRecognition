@@ -200,6 +200,17 @@ class FuturesData(object):
         """
         Collect some extra information
         """
+
+        # examine the length information
+        for inst_type in range(4):
+            for i in range(self.train_all_data.shape[1]):
+                if self.train_length[inst_type, i] != len(self.train_all_data[inst_type, i]):
+                    print(self.train_length[inst_type, i], len(self.train_all_data[inst_type, i]))
+                self.train_length[inst_type, i] = len(self.train_all_data[inst_type, i])
+        for inst_type in range(4):
+            for i in range(self.test_all_data.shape[1]):
+                self.test_length[inst_type, i] = len(self.test_all_data[inst_type, i])
+
         self.train_file_number = self.train_all_data.shape[1]
         self.train_min_length = self.train_length.min() - DEP_LEN
         self.train_number = self.train_min_length * self.train_file_number
@@ -261,8 +272,8 @@ class FuturesData(object):
                 tp.logger.info("Fatal error: %d %d " % (idx, min_length))
 
             # use end inst type to find an ending at a timestamp
-            scaled_idx = int((length[end_type, file_idx] - DEP_LEN) * idx / float(min_length))
-            barrier_time = all_data[end_type, file_idx].index[INPUT_LEN + scaled_idx]
+            scaled_idx = int(float(length[end_type, file_idx] - DEP_LEN - 20) / float(min_length) * idx)
+            barrier_time = all_data[end_type, file_idx].index[INPUT_LEN + 10 + scaled_idx]
             
             IS_FAILED = False
             end_idxs = []
@@ -273,7 +284,7 @@ class FuturesData(object):
                 try:
                     end_idx = int(end_idx)
                 except TypeError:
-                    end_idx = end_idx.start
+                    end_idx = end_idx.stop
                 end_idxs.append(end_idx)
                 if end_idx < INPUT_LEN or end_idx + OUTPUT_LEN >= length[inst_type, file_idx]:
                     IS_FAILED = True
@@ -284,10 +295,14 @@ class FuturesData(object):
                 continue
 
             for i, end_idx in enumerate(end_idxs):
-                train_seq.append(all_data[i, file_idx].values[end_idx-INPUT_LEN:end_idx])
-                target_seq.append(all_data[i, file_idx].values[end_idx:end_idx+OUTPUT_LEN])
-                slope = (OUTPUT_LEN * (tmp_x * target_seq[i]).sum() - sum_tmp_x * target_seq[i].sum()) / tmp_div / 5000.0
-                k.append(get_class(slope))
+                train_seq.append(all_data[i, file_idx].values[end_idx+1-INPUT_LEN:end_idx+1])
+                target_seq.append(all_data[i, file_idx].values[end_idx+1:end_idx+1+OUTPUT_LEN])
+                if target_seq[i].shape[0] == OUTPUT_LEN:
+                    slope = (OUTPUT_LEN * (tmp_x * target_seq[i]).sum() - sum_tmp_x * target_seq[i].sum()) / tmp_div / 5000.0
+                    k.append(get_class(slope))
+                else:
+                    tp.logger.info("Failure at target seq %d %d %d %d" % (target_seq[i].shape[0], i, file_idx, len(all_data[i, file_idx]) ))
+                    k.append(0)
             break
 
         # debug
