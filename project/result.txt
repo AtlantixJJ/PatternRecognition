@@ -1,3 +1,103 @@
+# Current Data
+
+Combined MLP:
+
+((96306,), (96306,))
+Recall:0.60965,Precision:0.52005
+Recall:0.54028,Precision:0.54849
+Recall:0.49416,Precision:0.52185
+Recall:0.54934,Precision:0.55871
+Recall:0.64778,Precision:0.56688
+Precision:0.54253
+((96306,), (96306,))
+Recall:0.75402,Precision:0.39026
+Recall:0.65929,Precision:0.62120
+Recall:0.62436,Precision:0.74104
+Recall:0.68023,Precision:0.62625
+Recall:0.74541,Precision:0.45191
+Precision:0.65240
+((96306,), (96306,))
+Recall:0.77459,Precision:0.71548
+Recall:0.27308,Precision:0.31457
+Recall:0.25239,Precision:0.25449
+Recall:0.28755,Precision:0.30816
+Recall:0.75340,Precision:0.73416
+Precision:0.55700
+((96306,), (96306,))
+Recall:0.80341,Precision:0.69730
+Recall:0.22578,Precision:0.28248
+Recall:0.18799,Precision:0.23478
+Recall:0.23424,Precision:0.29324
+Recall:0.79837,Precision:0.73536
+Precision:0.58550
+Model saved in model/combine_mlp.ckpt
+
+Single Linear:
+
+((96306,), (96306,))
+Recall:0.72642,Precision:0.39070
+Recall:0.52799,Precision:0.52969
+Recall:0.46549,Precision:0.58183
+Recall:0.53846,Precision:0.55332
+Recall:0.76080,Precision:0.43392
+Precision:0.52989
+((96306,), (96306,))
+Recall:0.75047,Precision:0.38759
+Recall:0.66000,Precision:0.60165
+Recall:0.62118,Precision:0.75261
+Recall:0.67207,Precision:0.61843
+Recall:0.77411,Precision:0.42867
+Precision:0.64905
+((96306,), (96306,))
+Recall:0.75521,Precision:0.65852
+Recall:0.25647,Precision:0.31515
+Recall:0.22231,Precision:0.23985
+Recall:0.25915,Precision:0.29790
+Recall:0.73417,Precision:0.68173
+Precision:0.52049
+((96306,), (96306,))
+Recall:0.79967,Precision:0.72032
+Recall:0.23939,Precision:0.27733
+Recall:0.19575,Precision:0.22443
+Recall:0.22529,Precision:0.27483
+Recall:0.79183,Precision:0.75203
+Precision:0.59579
+
+Single MLP:
+
+((96306,), (96306,))
+Recall:0.67771,Precision:0.45525
+Recall:0.53629,Precision:0.52808
+Recall:0.47970,Precision:0.56580
+Recall:0.54400,Precision:0.55256
+Recall:0.69327,Precision:0.51883
+Precision:0.53846
+((96306,), (96306,))
+Recall:0.76985,Precision:0.39130
+Recall:0.68711,Precision:0.63306
+Recall:0.63760,Precision:0.77225
+Recall:0.70055,Precision:0.64030
+Recall:0.77405,Precision:0.45339
+Precision:0.67093
+((96306,), (96306,))
+Recall:0.82717,Precision:0.58873
+Recall:0.25605,Precision:0.37188
+Recall:0.24075,Precision:0.33502
+Recall:0.26916,Precision:0.37367
+Recall:0.80110,Precision:0.61187
+Precision:0.50723
+((96306,), (96306,))
+Recall:0.74196,Precision:0.67370
+Recall:0.19824,Precision:0.22853
+Recall:0.16820,Precision:0.18999
+Recall:0.19512,Precision:0.23166
+Recall:0.73002,Precision:0.69973
+Precision:0.54909
+Model saved in model/all_model.ckpt
+
+
+# Last Night
+
 Combine MLP:
 
 ((96306,), (96306,))
